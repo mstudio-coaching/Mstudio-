@@ -1,0 +1,546 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>M Studio coaching</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="M Studio">
+<meta name="theme-color" content="#0E6B66">
+<link rel="apple-touch-icon" href="icon.png">
+<link rel="icon" href="icon.png">
+<link rel="manifest" href="manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Figtree:wght@400;500;600;700&display=swap">
+<style>
+:root{
+  --bg:#EEF2F1; --surface:#FFFFFF; --ink:#13201F; --muted:#5C6B69; --line:#D6DEDC;
+  --accent:#0E6B66; --accent-ink:#FFFFFF; --soft:#DCEBE9; --warn:#B4434A; --warn-soft:#F5DADB; --ok:#2E7D4F; --ok-soft:#DCEFE2;
+  --display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif; --body:"Figtree",system-ui,-apple-system,"Segoe UI",sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#0E1615; --surface:#172221; --ink:#E6EEEC; --muted:#93A4A1; --line:#2A3836;
+  --accent:#3DB3AB; --accent-ink:#06201E; --soft:#1C3532; --warn:#E07A80; --warn-soft:#3B2022; --ok:#5CC285; --ok-soft:#173023; color-scheme:dark}}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg)}
+:root{padding-top:env(safe-area-inset-top,0px)}
+body{color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.45;-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--bg)}
+[hidden]{display:none!important}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.wrap{max-width:720px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--bg)}
+header.top .wrap{display:flex;align-items:center;gap:10px;padding-block:14px 10px}
+.brand{font-family:var(--display);font-weight:800;font-size:26px;text-transform:uppercase;line-height:1}
+.brand small{display:block;font-family:var(--body);font-weight:600;font-size:11px;letter-spacing:.12em;color:var(--muted);margin-top:4px}
+.grow{flex:1;min-width:0}
+main{padding-bottom:calc(90px + env(safe-area-inset-bottom,0px))}
+main .wrap{display:flex;flex-direction:column;gap:18px;padding-block:6px 20px}
+h2.sec{font-family:var(--display);font-weight:700;font-size:15px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
+.btn{border:0;border-radius:10px;padding:11px 14px;background:var(--soft);color:var(--ink);font-weight:600;display:inline-flex;align-items:center;justify-content:center;gap:6px;text-decoration:none}
+.btn.primary{background:var(--accent);color:var(--accent-ink)}
+.btn.ghost{background:transparent;border:1px solid var(--line)}
+.btn.danger{background:var(--warn-soft);color:var(--warn)}
+.btn.sm{padding:7px 11px;font-size:13px;border-radius:8px}
+.btn.block{width:100%}
+.btn[disabled]{opacity:.55}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px}
+.pad{padding:14px}
+.row{display:flex;align-items:center;gap:12px;padding:12px 14px;border-bottom:1px solid var(--line);min-width:0}
+.row:last-child{border-bottom:0}
+.row.tap{width:100%;text-align:left;background:none;border-left:0;border-right:0;border-top:0}
+.t{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.s{font-size:13px;color:var(--muted);overflow:hidden;text-overflow:ellipsis}
+.empty{padding:22px 16px;color:var(--muted);text-align:center;font-size:14px}
+.notice{font-size:13px;color:var(--muted)}
+.chip{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:3px 8px;border-radius:999px;white-space:nowrap;background:var(--soft);color:var(--accent)}
+.chip.ok{background:var(--ok-soft);color:var(--ok)} .chip.warn{background:var(--warn-soft);color:var(--warn)} .chip.mute{background:var(--line);color:var(--muted)}
+.hello{font-family:var(--display);font-weight:700;font-size:34px;line-height:1.05;margin:0;text-wrap:balance}
+.hello span{color:var(--accent)}
+.wk-tabs{display:flex;flex-wrap:wrap;gap:6px}
+.wk{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:7px 13px;font-weight:700;font-size:13px;font-variant-numeric:tabular-nums}
+.wk[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.wk.cur{box-shadow:inset 0 0 0 2px var(--accent)}
+.seance{background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.seance-h{display:flex;align-items:center;gap:10px;padding:14px 14px 6px}
+.seance-h h3{margin:0;font-family:var(--display);font-weight:800;font-size:24px;text-transform:uppercase;flex:1;min-width:0}
+.exo{display:grid;grid-template-columns:44px minmax(0,1fr);gap:4px 10px;padding:12px 14px;border-top:1px solid var(--line)}
+.exo .n{font-family:var(--display);font-weight:800;font-size:30px;color:var(--accent);line-height:1;grid-row:span 3}
+.exo .nm{font-weight:700;font-size:16px}
+.pills{display:flex;flex-wrap:wrap;gap:6px}
+.pill{font-size:13px;font-weight:700;padding:4px 10px;border-radius:999px;background:var(--soft);color:var(--accent);font-variant-numeric:tabular-nums}
+.pill.main{background:var(--accent);color:var(--accent-ink)}
+.exo .note{font-size:13px;color:var(--muted)}
+.seance-f{padding:12px 14px;border-top:1px solid var(--line);display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.done-banner{display:flex;align-items:center;gap:8px;color:var(--ok);font-weight:700}
+.stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px;min-width:0}
+.stat .k{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.stat .v{font-family:var(--display);font-weight:700;font-size:30px;line-height:1.1;font-variant-numeric:tabular-nums}
+.v.down{color:var(--ok)} .v.up{color:var(--warn)}
+.chart{padding:10px 8px 6px}
+.chart svg{width:100%;height:auto;display:block}
+.tbl{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14px;font-variant-numeric:tabular-nums}
+th,td{padding:9px 10px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.gallery{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.gallery button{border:0;padding:0;background:none;border-radius:10px;overflow:hidden;aspect-ratio:3/4;max-width:100%;position:relative}
+.gallery img,.cmp img{width:100%;height:100%;object-fit:cover;display:block;background:var(--line)}
+.gallery span{position:absolute;left:4px;bottom:4px;font-size:10px;font-weight:700;background:rgba(0,0,0,.55);color:#fff;padding:2px 6px;border-radius:6px}
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.cmp figure{margin:0;display:flex;flex-direction:column;gap:4px}
+.cmp .ph{aspect-ratio:3/4;border-radius:12px;overflow:hidden;max-width:100%}
+.cmp figcaption{font-size:12px;font-weight:700;color:var(--muted);text-align:center}
+.f{display:flex;flex-direction:column;gap:5px;min-width:0}
+.f label{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.f input,.f select,.f textarea{width:100%;padding:12px;border-radius:10px;border:1px solid var(--line);background:var(--surface);min-width:0;font-size:16px}
+.f textarea{min-height:80px;resize:vertical}
+.frow{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.form{display:flex;flex-direction:column;gap:12px}
+.actions{display:flex;gap:10px;flex-wrap:wrap}
+.actions .btn{flex:1;min-width:130px}
+.scale{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+.scale button{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:10px 0;font-weight:800;font-family:var(--display);font-size:20px}
+.scale button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:25;background:var(--surface);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
+nav.tabs .wrap{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr)}
+nav.tabs button{border:0;background:none;padding:8px 2px 10px;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;font-weight:600;color:var(--muted)}
+nav.tabs svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+nav.tabs button[aria-current="page"]{color:var(--accent)}
+.scrim{position:fixed;inset:0;z-index:40;background:rgba(8,16,15,.45);display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--bg);width:100%;max-width:720px;max-height:92%;overflow:auto;border-radius:18px 18px 0 0;padding-bottom:calc(20px + env(safe-area-inset-bottom,0px))}
+.sheet-head{position:sticky;top:0;background:var(--bg);z-index:2;display:flex;align-items:center;gap:10px;padding:14px max(16px,env(safe-area-inset-right,0px)) 10px max(16px,env(safe-area-inset-left,0px));border-bottom:1px solid var(--line)}
+.sheet-head h3{flex:1;margin:0;font-family:var(--display);font-weight:700;font-size:22px}
+.sheet-body{padding:14px max(16px,env(safe-area-inset-right,0px)) 0 max(16px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:14px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(90px + env(safe-area-inset-bottom,0px));z-index:60;background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;font-weight:600;font-size:14px;max-width:90%;text-align:center}
+.login{min-height:100%;display:flex;flex-direction:column;justify-content:center;gap:18px;padding-block:40px}
+.login .logo{font-family:var(--display);font-weight:800;font-size:54px;line-height:.95;text-transform:uppercase}
+.login .logo span{color:var(--accent);display:block}
+.seg{display:flex;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:3px;gap:3px}
+.seg button{flex:1;border:0;background:none;padding:9px;border-radius:8px;font-weight:600;font-size:14px;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.err{color:var(--warn);font-size:14px;font-weight:600}
+.avatar{width:40px;height:40px;flex:none;border-radius:12px;display:grid;place-items:center;font-family:var(--display);font-weight:700;font-size:18px;background:var(--soft);color:var(--accent)}
+.back{border:0;background:none;color:var(--accent);font-weight:700;padding:0;font-size:15px}
+.code{font-family:var(--display);font-weight:800;font-size:28px;letter-spacing:.08em;user-select:all;-webkit-user-select:all}
+details.cons{background:var(--soft);border-radius:14px;padding:12px 14px}
+details.cons summary{font-weight:700;cursor:pointer}
+.big-img{width:100%;border-radius:12px;display:block}
+@media (min-width:620px){.stats{grid-template-columns:repeat(4,minmax(0,1fr))}.gallery{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media (prefers-reduced-motion:no-preference){.sheet{animation:up .22s ease-out}@keyframes up{from{transform:translateY(30px);opacity:.6}to{transform:none;opacity:1}}}
+</style>
+</head>
+<body>
+<header class="top" id="hdr" hidden><div class="wrap"><div class="grow"><div class="brand">M Studio<small id="sub">COACHING</small></div></div><span id="hdrRight"></span></div></header>
+<main><div class="wrap" id="view"><div class="empty">Chargement…</div></div></main>
+<nav class="tabs" id="nav" hidden><div class="wrap" id="tabs"></div></nav>
+<div id="sheetRoot"></div>
+
+<script src="config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+(function(){
+var CFG=window.MSTUDIO||{}, sb=null, me=null, prof=null, tab=null;
+var D={prog:null,done:[],mesures:[],photos:[]};      // client data
+var C={clients:[],invs:[],sel:null,selTab:"prog",act:null}; // coach data
+var weekSel=null, urlCache={};
+var $=function(id){return document.getElementById(id)};
+
+/* ---------- utils ---------- */
+function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+function ymd(d){d=d||new Date();var m=d.getMonth()+1,j=d.getDate();return d.getFullYear()+"-"+(m<10?"0":"")+m+"-"+(j<10?"0":"")+j}
+function pd(s){var p=String(s||"").slice(0,10).split("-");return new Date(+p[0],(+p[1]||1)-1,+p[2]||1)}
+var MOIS=["janv.","févr.","mars","avr.","mai","juin","juil.","août","sept.","oct.","nov.","déc."];
+function fdate(s){if(!s)return"";var d=new Date(s);if(String(s).length<=10)d=pd(s);return d.getDate()+" "+MOIS[d.getMonth()]+(d.getFullYear()!==new Date().getFullYear()?" "+d.getFullYear():"")}
+function fnum(n){return n==null||n===""?"–":(+n).toLocaleString("fr-FR",{maximumFractionDigits:1})}
+function initials(n){return (n||"?").trim().split(/\s+/).slice(0,2).map(function(w){return w[0]}).join("").toUpperCase()}
+var tt;function toast(m){var o=document.querySelector(".toast");if(o)o.remove();var d=document.createElement("div");d.className="toast";d.textContent=m;document.body.appendChild(d);clearTimeout(tt);tt=setTimeout(function(){d.remove()},2800)}
+function copy(t){try{navigator.clipboard.writeText(t).then(function(){toast("Copié")},function(){toast("Copie impossible : sélectionne le texte")})}catch(e){toast("Copie impossible : sélectionne le texte")}}
+function first(n){return (n||"").split(" ")[0]}
+function err(e){console.error(e);toast((e&&e.message)?"Erreur : "+e.message:"Une erreur est survenue, réessaie.")}
+function notify(title,msg,tags){
+  if(!CFG.NTFY_TOPIC)return;
+  try{fetch("https://ntfy.sh/",{method:"POST",body:JSON.stringify({topic:CFG.NTFY_TOPIC,title:title,message:msg,tags:tags||[]})}).catch(function(){})}catch(e){}
+}
+function weeksOf(p){return (p&&Array.isArray(p.weeks))?p.weeks:[]}
+function curWeek(p){var n=weeksOf(p).length;if(!n)return 0;var d=Math.floor((pd(ymd())-pd(p.debut))/864e5/7);return Math.max(0,Math.min(n-1,d))}
+
+/* ---------- sheet ---------- */
+function openSheet(title,body,mount){
+  var r=$("sheetRoot");
+  r.innerHTML='<div class="scrim" data-close="1"><div class="sheet" role="dialog" aria-modal="true" aria-label="'+esc(title)+'"><div class="sheet-head"><h3>'+esc(title)+'</h3><button class="btn sm ghost" data-close="1">Fermer</button></div><div class="sheet-body">'+body+'</div></div></div>';
+  r.querySelector(".scrim").addEventListener("click",function(e){if(e.target.dataset.close)closeSheet()});
+  document.body.style.overflow="hidden"; if(mount)mount(r.querySelector(".sheet-body"));
+}
+function closeSheet(){$("sheetRoot").innerHTML="";document.body.style.overflow=""}
+
+/* ---------- shell ---------- */
+var ICON={
+  seances:'<svg viewBox="0 0 24 24"><path d="M6.5 7v10M17.5 7v10M3.5 9.5v5M20.5 9.5v5M6.5 12h11"/></svg>',
+  suivi:'<svg viewBox="0 0 24 24"><path d="M3 19h18"/><path d="M5 15l4-4 3 3 6-7"/></svg>',
+  photos:'<svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="14" rx="2.5"/><circle cx="12" cy="13" r="3.5"/><path d="M8 6l1.5-2h5L16 6"/></svg>',
+  profil:'<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/></svg>',
+  clients:'<svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.6 3.4-5.5 6.5-5.5s5.7 1.9 6.5 5.5"/><path d="M16 4.5a3.5 3.5 0 010 7M18 14.8c1.8.8 3 2.6 3.5 5.2"/></svg>',
+  activite:'<svg viewBox="0 0 24 24"><path d="M6 8a6 6 0 0112 0c0 7 3 8 3 8H3s3-1 3-8"/><path d="M10 20a2 2 0 004 0"/></svg>',
+  invit:'<svg viewBox="0 0 24 24"><path d="M15 19c0-2.8-2.7-5-6-5s-6 2.2-6 5"/><circle cx="9" cy="8" r="3.5"/><path d="M19 8v6M16 11h6"/></svg>'
+};
+function setTabs(list){
+  $("nav").hidden=false;$("hdr").hidden=false;
+  $("tabs").innerHTML=list.map(function(t){return '<button data-tab="'+t[0]+'"'+(tab===t[0]?' aria-current="page"':'')+'>'+ICON[t[0]]+t[1]+'</button>'}).join("");
+}
+$("tabs").addEventListener("click",function(e){var b=e.target.closest("[data-tab]");if(!b)return;tab=b.dataset.tab;C.sel=null;render();window.scrollTo(0,0)});
+
+/* ---------- boot ---------- */
+function boot(){
+  if(!CFG.SUPABASE_URL||CFG.SUPABASE_URL.indexOf("COLLE_ICI")===0||!window.supabase){
+    $("view").innerHTML='<div class="login"><div class="logo">M Studio<span>coaching</span></div><div class="panel pad"><b>L\'appli n\'est pas encore reliée à ta base de données.</b><p class="notice">Ouvre le fichier config.js et colle ton Project URL et ta clé anon public de Supabase, puis recharge la page.</p></div></div>';return;
+  }
+  sb=window.supabase.createClient(CFG.SUPABASE_URL,CFG.SUPABASE_ANON_KEY,{auth:{persistSession:true,autoRefreshToken:true}});
+  sb.auth.onAuthStateChange(function(ev,session){
+    if(ev==="PASSWORD_RECOVERY"){newPassword();return}
+    if(ev==="SIGNED_OUT"){me=null;prof=null;showLogin()}
+  });
+  sb.auth.getSession().then(function(r){var s=r.data&&r.data.session;if(s){me=s.user;loadProfile()}else showLogin()});
+}
+function loadProfile(){
+  sb.from("profiles").select("*").eq("id",me.id).maybeSingle().then(function(r){
+    if(r.error||!r.data){$("view").innerHTML='<div class="login"><div class="panel pad">Ton profil est introuvable. Contacte ta coach.<div style="margin-top:12px"><button class="btn" id="lo">Se déconnecter</button></div></div></div>';$("lo").onclick=function(){sb.auth.signOut()};return}
+    prof=r.data;
+    if(prof.role==="coach"){tab="activite";loadCoach()}else{tab="seances";loadClient()}
+  });
+}
+
+/* ---------- login ---------- */
+var loginMode="in";
+function showLogin(){
+  $("nav").hidden=true;$("hdr").hidden=true;
+  var up=loginMode==="up";
+  $("view").innerHTML='<div class="login"><div class="logo">M Studio<span>coaching</span></div>'+
+    '<div class="seg" role="group"><button data-m="in" aria-pressed="'+!up+'">Connexion</button><button data-m="up" aria-pressed="'+up+'">Créer mon compte</button></div>'+
+    '<form class="form" id="lf" novalidate>'+
+    (up?'<div class="f"><label for="l_nom">Prénom et nom</label><input id="l_nom" autocomplete="name" required></div>':'')+
+    '<div class="f"><label for="l_mail">E-mail</label><input id="l_mail" type="email" autocomplete="email" inputmode="email" required></div>'+
+    '<div class="f"><label for="l_pw">Mot de passe</label><input id="l_pw" type="password" autocomplete="'+(up?'new-password':'current-password')+'" minlength="6" required></div>'+
+    (up?'<div class="f"><label for="l_code">Code d\'invitation</label><input id="l_code" autocapitalize="characters" placeholder="Reçu de ta coach" required></div>':'')+
+    '<div class="err" id="lerr" hidden></div>'+
+    '<button class="btn primary block" type="submit" id="lbtn">'+(up?'Créer mon compte':'Se connecter')+'</button>'+
+    (up?'':'<button class="btn ghost block" type="button" id="forgot">Mot de passe oublié</button>')+
+    '</form><div class="notice">Ajoute l\'appli sur ton écran d\'accueil : dans Safari, bouton Partager puis « Sur l\'écran d\'accueil ».</div></div>';
+  $("view").querySelectorAll("[data-m]").forEach(function(b){b.onclick=function(){loginMode=b.dataset.m;showLogin()}});
+  var showErr=function(m){var e=$("lerr");e.textContent=m;e.hidden=false;$("lbtn").disabled=false};
+  $("lf").addEventListener("submit",function(e){
+    e.preventDefault();$("lerr").hidden=true;
+    var mail=$("l_mail").value.trim(),pw=$("l_pw").value;
+    if(!mail||pw.length<6)return showErr("Indique ton e-mail et un mot de passe d'au moins 6 caractères.");
+    $("lbtn").disabled=true;
+    if(up){
+      var nom=$("l_nom").value.trim(),code=$("l_code").value.trim().toUpperCase();
+      if(!nom||!code)return showErr("Indique ton nom et ton code d'invitation.");
+      sb.auth.signUp({email:mail,password:pw,options:{data:{nom:nom,code:code}}}).then(function(r){
+        if(r.error){var m=r.error.message||"";return showErr(/database|saving new user/i.test(m)?"Code d'invitation invalide ou déjà utilisé. Vérifie-le avec ta coach.":/registered|exists/i.test(m)?"Un compte existe déjà avec cet e-mail : connecte-toi.":"Inscription impossible : "+m)}
+        if(!r.data.session){showErr("Compte créé ! Confirme ton e-mail avec le lien reçu, puis connecte-toi.");loginMode="in";return}
+        me=r.data.user;loadProfile();
+      });
+    }else{
+      sb.auth.signInWithPassword({email:mail,password:pw}).then(function(r){
+        if(r.error)return showErr(/confirm/i.test(r.error.message)?"Confirme d'abord ton e-mail avec le lien reçu.":"E-mail ou mot de passe incorrect.");
+        me=r.data.user;loadProfile();
+      });
+    }
+  });
+  var fg=$("forgot");if(fg)fg.onclick=function(){var mail=$("l_mail").value.trim();if(!mail)return showErr("Écris ton e-mail au-dessus, puis réappuie.");
+    sb.auth.resetPasswordForEmail(mail,{redirectTo:location.origin+location.pathname}).then(function(r){if(r.error)return showErr("Envoi impossible : "+r.error.message);toast("Lien envoyé par e-mail")})};
+}
+function newPassword(){
+  openSheet("Nouveau mot de passe",'<div class="f"><label for="np">Nouveau mot de passe</label><input id="np" type="password" minlength="6" autocomplete="new-password"></div><button class="btn primary" id="npb">Enregistrer</button>',function(b){
+    b.querySelector("#npb").onclick=function(){var v=b.querySelector("#np").value;if(v.length<6)return toast("6 caractères minimum");sb.auth.updateUser({password:v}).then(function(r){if(r.error)return err(r.error);closeSheet();toast("Mot de passe changé");sb.auth.getSession().then(function(x){if(x.data.session){me=x.data.session.user;loadProfile()}})})};
+  });
+}
+
+function render(){ if(!prof)return; if(prof.role==="coach")renderCoach(); else renderClient(); }
+
+/* =====================================================
+   ESPACE CLIENT
+   ===================================================== */
+function loadClient(){
+  Promise.all([
+    sb.from("programmes").select("*").eq("client_id",me.id).eq("actif",true).order("created_at",{ascending:false}).limit(1),
+    sb.from("mesures").select("*").eq("client_id",me.id).order("date",{ascending:true}),
+    sb.from("photos").select("*").eq("client_id",me.id).order("date",{ascending:true})
+  ]).then(function(r){
+    D.prog=(r[0].data&&r[0].data[0])||null; D.mesures=r[1].data||[]; D.photos=r[2].data||[];
+    if(weekSel==null&&D.prog)weekSel=curWeek(D.prog);
+    return D.prog?sb.from("seances_faites").select("*").eq("programme_id",D.prog.id):{data:[]};
+  }).then(function(r){D.done=(r&&r.data)||[];render()}).catch(err);
+}
+function renderClient(){
+  setTabs([["seances","Séances"],["suivi","Suivi"],["photos","Photos"],["profil","Profil"]]);
+  $("sub").textContent={seances:"MES SÉANCES",suivi:"MON SUIVI",photos:"MES PHOTOS",profil:"MON PROFIL"}[tab];
+  $("hdrRight").innerHTML="";
+  $("view").innerHTML=({seances:vSeances,suivi:vSuivi,photos:vPhotos,profil:vProfil})[tab]();
+  if(tab==="photos")hydratePhotos(D.photos);
+}
+function doneFor(wk,si){return D.done.filter(function(d){return d.semaine===wk&&d.seance===si}).sort(function(a,b){return b.done_at.localeCompare(a.done_at)})[0]}
+function exoHtml(x,i){
+  var pills=[];if(x.series||x.reps)pills.push('<span class="pill main">'+esc(x.series&&x.reps?x.series+" × "+x.reps:(x.series?x.series+" séries":x.reps))+'</span>');
+  if(x.charge)pills.push('<span class="pill">'+esc(x.charge)+'</span>');if(x.repos)pills.push('<span class="pill">Repos '+esc(x.repos)+'</span>');
+  return '<div class="exo"><div class="n">'+String(i+1).padStart(2,"0")+'</div><div class="nm">'+esc(x.nom)+'</div>'+(pills.length?'<div class="pills">'+pills.join("")+'</div>':'')+(x.note?'<div class="note">'+esc(x.note)+'</div>':'')+'</div>';
+}
+function vSeances(){
+  var p=D.prog,hr=new Date().getHours();
+  var html='<p class="hello">'+(hr<18?"Salut":"Bonsoir")+' <span>'+esc(first(prof.nom))+'</span></p>';
+  if(!p) return html+'<div class="panel"><div class="empty">Ta coach prépare ton programme. Il apparaîtra ici dès qu\'il sera prêt.</div></div>';
+  var ws=weeksOf(p),cw=curWeek(p);if(weekSel==null||weekSel>=ws.length)weekSel=cw;
+  var w=ws[weekSel]||{seances:[]},ss=w.seances||[];
+  var nDone=ss.filter(function(s,i){return doneFor(weekSel,i)}).length;
+  html+='<div><div style="font-family:var(--display);font-weight:800;font-size:22px;text-transform:uppercase">'+esc(p.titre)+'</div>'+(p.objectif?'<div class="notice">'+esc(p.objectif)+'</div>':'')+'</div>';
+  html+='<div class="wk-tabs" role="group" aria-label="Semaines">'+ws.map(function(x,i){var all=(x.seances||[]).length&&(x.seances||[]).every(function(s,j){return doneFor(i,j)});return '<button class="wk'+(i===cw?' cur':'')+'" data-wk="'+i+'" aria-pressed="'+(i===weekSel)+'">S'+(i+1)+(all?' ✓':'')+'</button>'}).join("")+'</div>';
+  html+='<div style="display:flex;align-items:baseline;gap:8px"><span style="font-family:var(--display);font-weight:800;font-size:26px;text-transform:uppercase">Semaine '+(weekSel+1)+'</span>'+(weekSel===cw?'<span class="chip">En cours</span>':'')+'<span class="grow"></span><span class="notice">'+nDone+' / '+ss.length+' faites</span></div>';
+  if(p.consignes)html+='<details class="cons"'+(weekSel===0&&!D.done.length?' open':'')+'><summary>Échauffement et consignes</summary><div style="margin-top:8px;white-space:pre-wrap">'+esc(p.consignes)+'</div></details>';
+  html+=ss.length?ss.map(function(s,i){var d=doneFor(weekSel,i);
+    return '<article class="seance"><div class="seance-h"><h3>'+esc(s.nom||"Séance "+(i+1))+'</h3>'+(d?'<span class="chip ok">Faite</span>':'')+'</div>'+(s.exos||[]).map(exoHtml).join("")+
+     '<div class="seance-f">'+(d?'<div class="done-banner grow">✓ Faite le '+fdate(d.done_at)+(d.ressenti?' · ressenti '+d.ressenti+'/10':'')+'</div><button class="btn sm ghost" data-redo="'+i+'">Refaite</button>':'<button class="btn primary block" data-done="'+i+'">J\'ai fait cette séance</button>')+'</div></article>'}).join(""):'<div class="panel"><div class="empty">Pas de séance cette semaine.</div></div>';
+  return html;
+}
+function markDone(si){
+  var p=D.prog,s=weeksOf(p)[weekSel].seances[si],r=7;
+  openSheet("Bravo !",'<div><b>'+esc(s.nom)+'</b> · semaine '+(weekSel+1)+'</div><div class="f"><label>Ressenti de la séance</label><div class="notice">1 = très facile · 10 = à fond</div><div class="scale" id="sc">'+[1,2,3,4,5,6,7,8,9,10].map(function(n){return '<button data-r="'+n+'" aria-pressed="'+(n===r)+'">'+n+'</button>'}).join("")+'</div></div><div class="f"><label for="cm">Un mot pour ta coach (facultatif)</label><textarea id="cm" placeholder="Charges utilisées, douleurs, ce qui était dur…"></textarea></div><button class="btn primary" id="ok">Valider la séance</button>',function(b){
+    b.querySelector("#sc").onclick=function(e){var t=e.target.closest("[data-r]");if(!t)return;r=+t.dataset.r;b.querySelectorAll("[data-r]").forEach(function(x){x.setAttribute("aria-pressed",String(+x.dataset.r===r))})};
+    b.querySelector("#ok").onclick=function(){var btn=this;btn.disabled=true;var cm=b.querySelector("#cm").value.trim();
+      sb.from("seances_faites").insert({client_id:me.id,programme_id:p.id,semaine:weekSel,seance:si,seance_nom:s.nom||"",ressenti:r,commentaire:cm}).select().single().then(function(x){
+        if(x.error){btn.disabled=false;return err(x.error)}
+        D.done.push(x.data);closeSheet();toast("Séance validée 💪");render();
+        notify(first(prof.nom)+" a fait sa séance","Semaine "+(weekSel+1)+" · "+(s.nom||"Séance")+" · ressenti "+r+"/10"+(cm?"\n« "+cm+" »":""),["muscle"]);
+      });
+    };
+  });
+}
+document.addEventListener("click",function(e){
+  var t=e.target.closest("[data-wk],[data-done],[data-redo]");if(!t||!prof||prof.role==="coach")return;
+  if(t.dataset.wk!=null){weekSel=+t.dataset.wk;render()}
+  else if(t.dataset.done!=null)markDone(+t.dataset.done);
+  else if(t.dataset.redo!=null)markDone(+t.dataset.redo);
+});
+
+/* ---------- suivi (shared client / coach) ---------- */
+var MKEYS=[["poids","Poids","kg"],["taille","Tour de taille","cm"],["hanches","Hanches","cm"],["poitrine","Poitrine","cm"],["cuisse","Cuisse","cm"],["bras","Bras","cm"]];
+function chartSvg(rows){
+  var pts=rows.filter(function(r){return r.poids!=null&&r.poids!==""}).map(function(r){return {d:pd(r.date).getTime(),v:+r.poids,s:r.date}});
+  if(pts.length<2)return '<div class="empty">La courbe de poids apparaît dès la 2ᵉ pesée.</div>';
+  var W=340,H=150,L=34,R=12,T=14,B=26,minV=Math.min.apply(null,pts.map(function(p){return p.v})),maxV=Math.max.apply(null,pts.map(function(p){return p.v}));
+  var pad=Math.max(1,(maxV-minV)*.15);minV=Math.floor(minV-pad);maxV=Math.ceil(maxV+pad);
+  var d0=pts[0].d,d1=pts[pts.length-1].d||d0+1;if(d1===d0)d1=d0+1;
+  var x=function(d){return L+(d-d0)/(d1-d0)*(W-L-R)},y=function(v){return T+(maxV-v)/(maxV-minV)*(H-T-B)};
+  var line=pts.map(function(p){return x(p.d).toFixed(1)+","+y(p.v).toFixed(1)}).join(" ");
+  var area="M"+x(pts[0].d)+","+(H-B)+" L"+line.split(" ").join(" L")+" L"+x(pts[pts.length-1].d)+","+(H-B)+" Z";
+  var mid=Math.round((minV+maxV)/2),last=pts[pts.length-1];
+  return '<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Évolution du poids"><g style="font:600 10px var(--body);fill:var(--muted)">'+
+    [maxV,mid,minV].map(function(v){return '<line x1="'+L+'" x2="'+(W-R)+'" y1="'+y(v)+'" y2="'+y(v)+'" style="stroke:var(--line)" stroke-width="1"/><text x="'+(L-6)+'" y="'+(y(v)+3)+'" text-anchor="end">'+v+'</text>'}).join("")+
+    '<text x="'+L+'" y="'+(H-8)+'">'+fdate(pts[0].s)+'</text><text x="'+(W-R)+'" y="'+(H-8)+'" text-anchor="end">'+fdate(last.s)+'</text></g>'+
+    '<path d="'+area+'" style="fill:var(--soft)"/><polyline points="'+line+'" fill="none" style="stroke:var(--accent)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>'+
+    '<circle cx="'+x(last.d)+'" cy="'+y(last.v)+'" r="5" style="fill:var(--accent);stroke:var(--surface)" stroke-width="2"/></svg>';
+}
+function suiviHtml(rows,canAdd){
+  var w=rows.filter(function(r){return r.poids!=null&&r.poids!==""});
+  var last=w[w.length-1],firstW=w[0],delta=last&&firstW?(+last.poids-+firstW.poids):null;
+  var lt=rows.filter(function(r){return r.taille}),dT=lt.length>1?(+lt[lt.length-1].taille-+lt[0].taille):null;
+  var html='<div class="stats"><div class="stat"><div class="k">Poids actuel</div><div class="v">'+(last?fnum(last.poids)+' kg':'–')+'</div></div>'+
+    '<div class="stat"><div class="k">Depuis le début</div><div class="v '+(delta<0?'down':delta>0?'up':'')+'">'+(delta==null?'–':(delta>0?'+':'')+fnum(delta)+' kg')+'</div></div>'+
+    '<div class="stat"><div class="k">Tour de taille</div><div class="v">'+(lt.length?fnum(lt[lt.length-1].taille)+' cm':'–')+'</div></div>'+
+    '<div class="stat"><div class="k">Taille gagnée</div><div class="v '+(dT<0?'down':dT>0?'up':'')+'">'+(dT==null?'–':(dT>0?'+':'')+fnum(dT)+' cm')+'</div></div></div>';
+  if(canAdd)html+='<button class="btn primary block" id="addM">+ Nouvelle pesée et mensurations</button>';
+  html+='<section><h2 class="sec">Poids</h2><div class="panel chart">'+chartSvg(rows)+'</div></section>';
+  html+='<section><h2 class="sec">Historique</h2><div class="panel">'+(rows.length?'<div class="tbl"><table><thead><tr><th>Date</th>'+MKEYS.map(function(k){return '<th>'+k[1].replace("Tour de taille","Taille")+' ('+k[2]+')</th>'}).join("")+'<th></th></tr></thead><tbody>'+rows.slice().reverse().map(function(r){return '<tr><td>'+fdate(r.date)+'</td>'+MKEYS.map(function(k){return '<td>'+fnum(r[k[0]])+'</td>'}).join("")+'<td><button class="btn sm ghost" data-delm="'+r.id+'" aria-label="Supprimer">✕</button></td></tr>'+(r.note?'<tr><td colspan="8" class="notice" style="text-align:left;white-space:normal">'+esc(r.note)+'</td></tr>':'')}).join("")+'</tbody></table></div>':'<div class="empty">Aucune mesure pour l\'instant.</div>')+'</div></section>';
+  return html;
+}
+function vSuivi(){setTimeout(bindSuivi,0);return suiviHtml(D.mesures,true)}
+function bindSuivi(){
+  var a=$("addM");if(a)a.onclick=function(){
+    openSheet("Nouvelle mesure",'<div class="notice">Le matin, à jeun, au même endroit à chaque fois. Laisse vide ce que tu n\'as pas mesuré.</div><div class="f"><label for="m_date">Date</label><input id="m_date" type="date" value="'+ymd()+'"></div><div class="frow">'+MKEYS.map(function(k){return '<div class="f"><label for="m_'+k[0]+'">'+k[1]+' ('+k[2]+')</label><input id="m_'+k[0]+'" inputmode="decimal"></div>'}).join("")+'</div><div class="f"><label for="m_note">Remarque</label><textarea id="m_note"></textarea></div><button class="btn primary" id="m_ok">Enregistrer</button>',function(b){
+      b.querySelector("#m_ok").onclick=function(){var btn=this,row={client_id:me.id,date:b.querySelector("#m_date").value||ymd(),note:b.querySelector("#m_note").value.trim()},any=false;
+        MKEYS.forEach(function(k){var v=b.querySelector("#m_"+k[0]).value.replace(",",".").trim();if(v!==""&&!isNaN(+v)){row[k[0]]=+v;any=true}});
+        if(!any)return toast("Remplis au moins une mesure");btn.disabled=true;
+        sb.from("mesures").insert(row).select().single().then(function(x){if(x.error){btn.disabled=false;return err(x.error)}
+          D.mesures.push(x.data);D.mesures.sort(function(a,b){return a.date.localeCompare(b.date)});closeSheet();toast("Mesure enregistrée");render();
+          notify(first(prof.nom)+" a envoyé ses mesures",MKEYS.filter(function(k){return row[k[0]]!=null}).map(function(k){return k[1]+" : "+fnum(row[k[0]])+" "+k[2]}).join(" · "),["straight_ruler"]);
+        });
+      };
+    });
+  };
+}
+document.addEventListener("click",function(e){var t=e.target.closest("[data-delm]");if(!t)return;
+  var id=t.dataset.delm;if(t.dataset.sure!=="1"){t.dataset.sure="1";t.textContent="Sûr ?";setTimeout(function(){if(t.isConnected){t.dataset.sure="";t.textContent="✕"}},3000);return}
+  sb.from("mesures").delete().eq("id",id).then(function(x){if(x.error)return err(x.error);D.mesures=D.mesures.filter(function(m){return m.id!==id});if(C.act&&C.act.mesures)C.act.mesures=C.act.mesures.filter(function(m){return m.id!==id});toast("Supprimé");render()});
+});
+
+/* ---------- photos (shared) ---------- */
+var ANG={face:"Face",profil:"Profil",dos:"Dos"};
+function photosHtml(list,canAdd){
+  var html='';
+  if(canAdd)html+='<div class="panel pad" style="display:flex;flex-direction:column;gap:10px"><div class="notice">Même tenue, même lumière, même endroit à chaque fois : c\'est là qu\'on voit vraiment les progrès.</div><div class="frow"><div class="f"><label for="ph_ang">Angle</label><select id="ph_ang"><option value="face">Face</option><option value="profil">Profil</option><option value="dos">Dos</option></select></div><div class="f"><label for="ph_date">Date</label><input id="ph_date" type="date" value="'+ymd()+'"></div></div><label class="btn primary block" for="ph_file">+ Ajouter une photo</label><input id="ph_file" type="file" accept="image/*" hidden></div>';
+  ["face","profil","dos"].forEach(function(a){var l=list.filter(function(p){return p.angle===a});if(l.length>=2){html+='<section><h2 class="sec">Avant / après · '+ANG[a]+'</h2><div class="cmp"><figure><div class="ph"><img data-path="'+esc(l[0].path)+'" alt="Avant, '+ANG[a]+'"></div><figcaption>'+fdate(l[0].date)+'</figcaption></figure><figure><div class="ph"><img data-path="'+esc(l[l.length-1].path)+'" alt="Après, '+ANG[a]+'"></div><figcaption>'+fdate(l[l.length-1].date)+'</figcaption></figure></div></section>'}});
+  html+='<section><h2 class="sec">Toutes les photos</h2>'+(list.length?'<div class="gallery">'+list.slice().reverse().map(function(p){return '<button data-ph="'+p.id+'"><img data-path="'+esc(p.path)+'" alt="Photo du '+fdate(p.date)+'"><span>'+fdate(p.date)+' · '+(ANG[p.angle]||"")+'</span></button>'}).join("")+'</div>':'<div class="panel"><div class="empty">Aucune photo pour l\'instant.</div></div>')+'</section>';
+  return html;
+}
+function vPhotos(){setTimeout(bindPhotos,0);return photosHtml(D.photos,true)}
+function hydratePhotos(list){
+  var imgs=[].slice.call(document.querySelectorAll("img[data-path]"));if(!imgs.length)return;
+  var need=imgs.map(function(i){return i.dataset.path}).filter(function(p,i,a){return !urlCache[p]&&a.indexOf(p)===i});
+  var apply=function(){imgs.forEach(function(i){if(urlCache[i.dataset.path])i.src=urlCache[i.dataset.path]})};
+  if(!need.length)return apply();
+  sb.storage.from("photos").createSignedUrls(need,3600*6).then(function(r){(r.data||[]).forEach(function(x){if(x.signedUrl)urlCache[x.path]=x.signedUrl});apply()});
+}
+function compress(file){return new Promise(function(res,rej){var img=new Image(),u=URL.createObjectURL(file);img.onload=function(){var m=1600,s=Math.min(1,m/Math.max(img.width,img.height)),c=document.createElement("canvas");c.width=Math.round(img.width*s);c.height=Math.round(img.height*s);c.getContext("2d").drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(u);c.toBlob(function(b){b?res(b):rej(new Error("Image illisible"))},"image/jpeg",.85)};img.onerror=function(){rej(new Error("Format de photo non pris en charge"))};img.src=u})}
+function bindPhotos(){
+  var f=$("ph_file");if(!f)return;
+  f.onchange=function(){var file=f.files[0];if(!file)return;var ang=$("ph_ang").value,date=$("ph_date").value||ymd();toast("Envoi de la photo…");
+    compress(file).then(function(blob){var path=me.id+"/"+Date.now()+".jpg";
+      return sb.storage.from("photos").upload(path,blob,{contentType:"image/jpeg"}).then(function(u){if(u.error)throw u.error;
+        return sb.from("photos").insert({client_id:me.id,date:date,angle:ang,path:path}).select().single()}).then(function(x){if(x.error)throw x.error;
+        D.photos.push(x.data);D.photos.sort(function(a,b){return a.date.localeCompare(b.date)});toast("Photo ajoutée");render();
+        notify(first(prof.nom)+" a ajouté une photo",ANG[ang]+" · "+fdate(date),["camera"]);});
+    }).catch(err);
+  };
+}
+document.addEventListener("click",function(e){var t=e.target.closest("[data-ph]");if(!t)return;
+  var list=prof.role==="coach"&&C.act?C.act.photos:D.photos, p=list.filter(function(x){return x.id===t.dataset.ph})[0];if(!p)return;
+  openSheet(fdate(p.date)+" · "+(ANG[p.angle]||""),'<img class="big-img" alt="" src="'+esc(urlCache[p.path]||"")+'"><button class="btn danger" id="phd">Supprimer la photo</button>',function(b){
+    var d=b.querySelector("#phd");d.onclick=function(){if(d.dataset.sure!=="1"){d.dataset.sure="1";d.textContent="Confirmer la suppression";return}
+      sb.storage.from("photos").remove([p.path]).then(function(){return sb.from("photos").delete().eq("id",p.id)}).then(function(x){if(x&&x.error)return err(x.error);
+        D.photos=D.photos.filter(function(y){return y.id!==p.id});if(C.act)C.act.photos=C.act.photos.filter(function(y){return y.id!==p.id});closeSheet();toast("Photo supprimée");render()});
+    };
+  });
+});
+
+function vProfil(){
+  setTimeout(function(){$("lo").onclick=function(){sb.auth.signOut()}},0);
+  return '<div class="panel"><div class="row"><div class="avatar">'+esc(initials(prof.nom))+'</div><div class="grow"><div class="t">'+esc(prof.nom)+'</div><div class="s">'+esc(prof.email||me.email||"")+'</div></div></div></div>'+
+   '<div class="panel pad"><b>Installer l\'appli</b><p class="notice" style="margin:6px 0 0">Dans Safari : bouton Partager, puis « Sur l\'écran d\'accueil ». L\'appli s\'ouvre ensuite en plein écran comme une vraie appli.</p></div>'+
+   '<button class="btn ghost block" id="lo">Se déconnecter</button>';
+}
+
+/* =====================================================
+   ESPACE COACH
+   ===================================================== */
+function loadCoach(){
+  Promise.all([
+    sb.from("profiles").select("*").eq("role","client").order("nom"),
+    sb.from("invitations").select("*").eq("role","client").order("created_at",{ascending:false}),
+    sb.from("seances_faites").select("*").order("done_at",{ascending:false}).limit(60),
+    sb.from("mesures").select("*").order("created_at",{ascending:false}).limit(30),
+    sb.from("photos").select("*").order("created_at",{ascending:false}).limit(30)
+  ]).then(function(r){
+    C.clients=r[0].data||[];C.invs=r[1].data||[];C.feed={sf:r[2].data||[],m:r[3].data||[],ph:r[4].data||[]};render();
+  }).catch(err);
+}
+function cName(id){var c=C.clients.filter(function(x){return x.id===id})[0];return c?c.nom:"Client"}
+function renderCoach(){
+  setTabs([["activite","Activité"],["clients","Clients"],["invit","Inviter"]]);
+  $("hdrRight").innerHTML='<button class="btn sm ghost" id="lo2">Déconnexion</button>';$("lo2").onclick=function(){sb.auth.signOut()};
+  if(C.sel){$("sub").textContent="FICHE CLIENT";return vClient()}
+  $("sub").textContent={activite:"ESPACE COACH · ACTIVITÉ",clients:"ESPACE COACH · CLIENTS",invit:"ESPACE COACH · INVITATIONS"}[tab];
+  $("view").innerHTML=({activite:vFeed,clients:vClients,invit:vInvit})[tab]();
+  if(tab==="invit")bindInvit();
+}
+function vFeed(){
+  var f=C.feed||{sf:[],m:[],ph:[]},ev=[];
+  f.sf.forEach(function(x){ev.push({t:x.done_at,c:x.client_id,h:'<b>'+esc(first(cName(x.client_id)))+'</b> a fait <b>'+esc(x.seance_nom||"sa séance")+'</b> · S'+(x.semaine+1),s:(x.ressenti?'Ressenti '+x.ressenti+'/10':'')+(x.commentaire?' · « '+esc(x.commentaire)+' »':''),k:'ok',l:'Séance'})});
+  f.m.forEach(function(x){ev.push({t:x.created_at,c:x.client_id,h:'<b>'+esc(first(cName(x.client_id)))+'</b> a envoyé ses mesures',s:(x.poids?fnum(x.poids)+' kg':'')+(x.taille?' · taille '+fnum(x.taille)+' cm':''),k:'',l:'Mesures'})});
+  f.ph.forEach(function(x){ev.push({t:x.created_at,c:x.client_id,h:'<b>'+esc(first(cName(x.client_id)))+'</b> a ajouté une photo',s:ANG[x.angle]||"",k:'mute',l:'Photo'})});
+  ev.sort(function(a,b){return b.t.localeCompare(a.t)});
+  var wk=new Date();wk.setDate(wk.getDate()-7);var nWeek=f.sf.filter(function(x){return new Date(x.done_at)>wk}).length;
+  return '<p class="hello">Salut <span>'+esc(first(prof.nom))+'</span></p><div class="stats"><div class="stat"><div class="k">Clients</div><div class="v">'+C.clients.length+'</div></div><div class="stat"><div class="k">Séances · 7 jours</div><div class="v">'+nWeek+'</div></div></div>'+
+   '<section><h2 class="sec">Dernière activité</h2><div class="panel">'+(ev.length?ev.slice(0,40).map(function(e){return '<button class="row tap" data-cl="'+e.c+'"><div class="grow" style="min-width:0"><div style="font-size:14px">'+e.h+'</div><div class="s">'+fdate(e.t)+(e.s?' · '+e.s:'')+'</div></div><span class="chip '+e.k+'">'+e.l+'</span></button>'}).join(""):'<div class="empty">Rien pour l\'instant. Invite ton premier client dans l\'onglet Inviter.</div>')+'</div></section>';
+}
+function vClients(){
+  return '<div class="panel">'+(C.clients.length?C.clients.map(function(c){var last=(C.feed.sf||[]).filter(function(x){return x.client_id===c.id})[0];
+    return '<button class="row tap" data-cl="'+c.id+'"><div class="avatar">'+esc(initials(c.nom))+'</div><div class="grow"><div class="t">'+esc(c.nom)+'</div><div class="s">'+(last?'Dernière séance le '+fdate(last.done_at):'Aucune séance validée')+'</div></div><span aria-hidden="true">›</span></button>'}).join(""):'<div class="empty">Pas encore de client. Crée une invitation dans l\'onglet Inviter.</div>')+'</div>';
+}
+document.addEventListener("click",function(e){var t=e.target.closest("[data-cl]");if(!t||!prof||prof.role!=="coach")return;openClient(t.dataset.cl)});
+function openClient(id){
+  C.sel=id;C.selTab=C.selTab||"prog";C.act=null;render();
+  Promise.all([
+    sb.from("programmes").select("*").eq("client_id",id).order("created_at",{ascending:false}),
+    sb.from("seances_faites").select("*").eq("client_id",id).order("done_at",{ascending:false}),
+    sb.from("mesures").select("*").eq("client_id",id).order("date",{ascending:true}),
+    sb.from("photos").select("*").eq("client_id",id).order("date",{ascending:true})
+  ]).then(function(r){C.act={progs:r[0].data||[],done:r[1].data||[],mesures:r[2].data||[],photos:r[3].data||[]};render()}).catch(err);
+  window.scrollTo(0,0);
+}
+function vClient(){
+  var c=C.clients.filter(function(x){return x.id===C.sel})[0]||{nom:"Client"},a=C.act;
+  var head='<div><button class="back" id="back">‹ Clients</button></div><div style="display:flex;align-items:center;gap:12px"><div class="avatar">'+esc(initials(c.nom))+'</div><div class="grow"><div style="font-family:var(--display);font-weight:800;font-size:26px;text-transform:uppercase;line-height:1.05">'+esc(c.nom)+'</div><div class="s">'+esc(c.email||"")+'</div></div></div>'+
+    '<div class="seg" role="group">'+[["prog","Programme"],["seances","Séances"],["suivi","Suivi"],["photos","Photos"]].map(function(t){return '<button data-ct="'+t[0]+'" aria-pressed="'+(C.selTab===t[0])+'">'+t[1]+'</button>'}).join("")+'</div>';
+  var body=!a?'<div class="empty">Chargement…</div>':({prog:cProg,seances:cSeances,suivi:function(){return suiviHtml(a.mesures,false)},photos:function(){return photosHtml(a.photos,false)}})[C.selTab]();
+  $("view").innerHTML=head+body;
+  $("back").onclick=function(){C.sel=null;C.act=null;tab="clients";render()};
+  $("view").querySelectorAll("[data-ct]").forEach(function(b){b.onclick=function(){C.selTab=b.dataset.ct;render()}});
+  if(a&&C.selTab==="photos")hydratePhotos(a.photos);
+  if(a&&C.selTab==="prog")bindProg(c);
+}
+function progSummary(p){var ws=weeksOf(p),n=0,ex=0;ws.forEach(function(w){(w.seances||[]).forEach(function(s){n++;ex+=(s.exos||[]).length})});return ws.length+" sem. · "+n+" séances · "+ex+" exercices"}
+function cProg(){
+  var a=C.act,html='<button class="btn primary block" id="imp">+ Importer un programme du Carnet Coach</button>';
+  html+=a.progs.length?a.progs.map(function(p){var cw=curWeek(p),ws=weeksOf(p),nd=a.done.filter(function(d){return d.programme_id===p.id}).length,tot=0;ws.forEach(function(w){tot+=(w.seances||[]).length});
+    return '<div class="panel"><div class="row"><div class="grow"><div class="t">'+esc(p.titre)+'</div><div class="s">'+progSummary(p)+' · début '+fdate(p.debut)+'</div></div>'+(p.actif?'<span class="chip ok">Actif · S'+(cw+1)+'</span>':'<span class="chip mute">Archivé</span>')+'</div>'+
+     '<div class="row"><div class="grow"><div class="s">'+nd+' / '+tot+' séances faites</div><div style="height:8px;border-radius:4px;background:var(--soft);margin-top:6px;overflow:hidden"><div style="height:100%;width:'+(tot?Math.round(nd/tot*100):0)+'%;background:var(--accent)"></div></div></div></div>'+
+     '<div class="row" style="gap:8px;flex-wrap:wrap">'+(p.actif?'<button class="btn sm ghost" data-arch="'+p.id+'">Archiver</button>':'<button class="btn sm" data-act1="'+p.id+'">Rendre actif</button>')+'<button class="btn sm ghost" data-deb="'+p.id+'">Changer la date de début</button><button class="btn sm danger" data-delp="'+p.id+'">Supprimer</button></div></div>'}).join(""):'<div class="panel"><div class="empty">Aucun programme. Dans le Carnet Coach, ouvre « Envoyer » sur un programme, appuie sur « Copier pour l\'appli client », puis importe-le ici.</div></div>';
+  return html;
+}
+function bindProg(c){
+  var a=C.act;
+  $("imp").onclick=function(){
+    openSheet("Importer un programme",'<div class="notice">Dans le Carnet Coach : programme › Envoyer › « Copier pour l\'appli client ». Colle le contenu ici.</div><div class="f"><label for="ij">Programme copié</label><textarea id="ij" style="min-height:140px;font-family:ui-monospace,Menlo,monospace;font-size:12px" placeholder="Colle ici"></textarea></div><div class="f"><label for="id">Date de début (semaine 1)</label><input id="id" type="date" value="'+ymd()+'"></div><div class="err" id="ie" hidden></div><div id="ip"></div><button class="btn primary" id="iok">Importer pour '+esc(first(c.nom))+'</button>',function(b){
+      var parsed=null,ta=b.querySelector("#ij");
+      function parse(){var e=b.querySelector("#ie");e.hidden=true;parsed=null;b.querySelector("#ip").innerHTML="";var v=ta.value.trim();if(!v)return;
+        try{var s=v.slice(v.indexOf("{"),v.lastIndexOf("}")+1);var o=JSON.parse(s);if(!o||!Array.isArray(o.weeks))throw 0;parsed=o;b.querySelector("#ip").innerHTML='<div class="panel pad"><b>'+esc(o.titre||"Programme")+'</b><div class="s">'+progSummary(o)+'</div></div>'}
+        catch(x){e.textContent="Ce texte n'est pas un programme du Carnet Coach. Recopie-le avec le bouton « Copier pour l'appli client ».";e.hidden=false}}
+      ta.addEventListener("input",parse);ta.addEventListener("paste",function(){setTimeout(parse,0)});
+      b.querySelector("#iok").onclick=function(){if(!parsed){parse();if(!parsed)return}var btn=this;btn.disabled=true;
+        sb.from("programmes").update({actif:false}).eq("client_id",c.id).eq("actif",true).then(function(){
+          return sb.from("programmes").insert({client_id:c.id,titre:parsed.titre||"Programme",objectif:parsed.objectif||"",consignes:parsed.consignes||"",weeks:parsed.weeks,debut:b.querySelector("#id").value||ymd(),actif:true}).select().single()}).then(function(x){
+          if(x.error){btn.disabled=false;return err(x.error)}a.progs.forEach(function(p){p.actif=false});a.progs.unshift(x.data);closeSheet();toast("Programme envoyé à "+first(c.nom));render()});
+      };
+    });
+  };
+  $("view").querySelectorAll("[data-arch],[data-act1]").forEach(function(btn){btn.onclick=function(){var id=btn.dataset.arch||btn.dataset.act1,on=!!btn.dataset.act1;
+    var q=on?sb.from("programmes").update({actif:false}).eq("client_id",c.id).then(function(){return sb.from("programmes").update({actif:true}).eq("id",id)}):sb.from("programmes").update({actif:false}).eq("id",id);
+    q.then(function(x){if(x&&x.error)return err(x.error);a.progs.forEach(function(p){if(on)p.actif=p.id===id;else if(p.id===id)p.actif=false});render()})}});
+  $("view").querySelectorAll("[data-deb]").forEach(function(btn){btn.onclick=function(){var p=a.progs.filter(function(x){return x.id===btn.dataset.deb})[0];
+    openSheet("Date de début",'<div class="f"><label for="nd">Début de la semaine 1</label><input id="nd" type="date" value="'+esc(p.debut)+'"></div><button class="btn primary" id="ndok">Enregistrer</button>',function(b){b.querySelector("#ndok").onclick=function(){var v=b.querySelector("#nd").value;sb.from("programmes").update({debut:v}).eq("id",p.id).then(function(x){if(x.error)return err(x.error);p.debut=v;closeSheet();render()})}})}});
+  $("view").querySelectorAll("[data-delp]").forEach(function(btn){btn.onclick=function(){if(btn.dataset.sure!=="1"){btn.dataset.sure="1";btn.textContent="Confirmer";return}
+    sb.from("programmes").delete().eq("id",btn.dataset.delp).then(function(x){if(x.error)return err(x.error);a.progs=a.progs.filter(function(p){return p.id!==btn.dataset.delp});toast("Programme supprimé");render()})}});
+}
+function cSeances(){
+  var a=C.act;if(!a.done.length)return '<div class="panel"><div class="empty">Aucune séance validée pour l\'instant.</div></div>';
+  return '<div class="panel">'+a.done.map(function(d){return '<div class="row"><div class="grow" style="min-width:0"><div class="t">'+esc(d.seance_nom||"Séance")+' · S'+(d.semaine+1)+'</div><div class="s" style="white-space:normal">'+fdate(d.done_at)+(d.commentaire?' · « '+esc(d.commentaire)+' »':'')+'</div></div>'+(d.ressenti?'<span class="chip '+(d.ressenti>=9?'warn':'ok')+'">'+d.ressenti+'/10</span>':'')+'</div>'}).join("")+'</div>';
+}
+function rndCode(){var a="ABCDEFGHJKLMNPQRSTUVWXYZ23456789",s="";for(var i=0;i<6;i++)s+=a[Math.floor(Math.random()*a.length)];return s}
+function invMsg(i){return "Salut "+first(i.nom)+" ! Voici ton appli de coaching M Studio : "+location.origin+location.pathname+"\n\n1. Ouvre le lien dans Safari\n2. Appuie sur « Créer mon compte » avec ton code : "+i.code+"\n3. Ajoute l'appli sur ton écran d'accueil : bouton Partager › « Sur l'écran d'accueil »\n\nÀ très vite pour ta première séance 💪\nMaëva"}
+function vInvit(){
+  return '<div class="panel pad form"><div class="f"><label for="in_nom">Prénom et nom du client</label><input id="in_nom" placeholder="Coralie Martin"></div><button class="btn primary" id="in_ok">Créer le code d\'invitation</button></div>'+
+   '<section><h2 class="sec">Invitations</h2><div class="panel">'+(C.invs.length?C.invs.map(function(i){return '<div class="row"><div class="grow"><div class="t">'+esc(i.nom)+'</div><div class="s"><span class="code" style="font-size:18px">'+esc(i.code)+'</span></div></div>'+(i.used_by?'<span class="chip ok">Inscrit</span>':'<button class="btn sm" data-msg="'+i.id+'">Copier le message</button><button class="btn sm ghost" data-delinv="'+i.id+'" aria-label="Supprimer">✕</button>')+'</div>'}).join(""):'<div class="empty">Aucune invitation.</div>')+'</div></section>';
+}
+function bindInvit(){
+  $("in_ok").onclick=function(){var nom=$("in_nom").value.trim();if(!nom)return toast("Indique le nom du client");var btn=this;btn.disabled=true;
+    sb.from("invitations").insert({code:rndCode(),nom:nom,role:"client"}).select().single().then(function(x){btn.disabled=false;if(x.error)return err(x.error);C.invs.unshift(x.data);render();showInv(x.data)})};
+  $("view").querySelectorAll("[data-msg]").forEach(function(b){b.onclick=function(){showInv(C.invs.filter(function(i){return i.id===b.dataset.msg})[0])}});
+  $("view").querySelectorAll("[data-delinv]").forEach(function(b){b.onclick=function(){if(b.dataset.sure!=="1"){b.dataset.sure="1";b.textContent="Sûr ?";return}
+    sb.from("invitations").delete().eq("id",b.dataset.delinv).then(function(x){if(x.error)return err(x.error);C.invs=C.invs.filter(function(i){return i.id!==b.dataset.delinv});render()})}});
+}
+function showInv(i){var m=invMsg(i);
+  openSheet("Invitation de "+first(i.nom),'<div class="panel pad" style="text-align:center"><div class="notice">Code d\'invitation</div><div class="code">'+esc(i.code)+'</div></div><textarea readonly id="imsg" style="width:100%;min-height:200px;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--surface);font-size:14px">'+esc(m)+'</textarea><div class="actions"><button class="btn primary" id="icp">Copier le message</button><a class="btn" target="_blank" rel="noopener" href="https://wa.me/?text='+encodeURIComponent(m)+'">WhatsApp</a></div>',function(b){b.querySelector("#icp").onclick=function(){copy(m)}});
+}
+
+boot();
+})();
+</script>
+</body>
+</html>

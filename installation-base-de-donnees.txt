@@ -1,0 +1,159 @@
+-- ============================================================
+--  M Studio coaching : installation de la base de données
+--  À coller en entier dans Supabase > SQL Editor > New query > Run
+-- ============================================================
+
+-- Profils (coach et clients)
+create table if not exists public.profiles (
+  id uuid primary key references auth.users(id) on delete cascade,
+  nom text not null default '',
+  email text,
+  role text not null default 'client' check (role in ('client','coach')),
+  created_at timestamptz not null default now()
+);
+
+-- Invitations : un code par nouveau client
+create table if not exists public.invitations (
+  id uuid primary key default gen_random_uuid(),
+  code text not null unique,
+  nom text not null default '',
+  role text not null default 'client' check (role in ('client','coach')),
+  used_by uuid references auth.users(id) on delete set null,
+  used_at timestamptz,
+  created_at timestamptz not null default now()
+);
+
+-- Programmes (semaines et séances en JSON)
+create table if not exists public.programmes (
+  id uuid primary key default gen_random_uuid(),
+  client_id uuid not null references public.profiles(id) on delete cascade,
+  titre text not null default 'Programme',
+  objectif text default '',
+  consignes text default '',
+  weeks jsonb not null default '[]'::jsonb,
+  debut date not null default current_date,
+  actif boolean not null default true,
+  created_at timestamptz not null default now()
+);
+
+-- Séances validées par les clients
+create table if not exists public.seances_faites (
+  id uuid primary key default gen_random_uuid(),
+  client_id uuid not null references public.profiles(id) on delete cascade,
+  programme_id uuid references public.programmes(id) on delete cascade,
+  semaine int not null,
+  seance int not null,
+  seance_nom text default '',
+  ressenti int check (ressenti between 1 and 10),
+  commentaire text default '',
+  done_at timestamptz not null default now()
+);
+
+-- Pesées et mensurations
+create table if not exists public.mesures (
+  id uuid primary key default gen_random_uuid(),
+  client_id uuid not null references public.profiles(id) on delete cascade,
+  date date not null default current_date,
+  poids numeric, taille numeric, hanches numeric, poitrine numeric, cuisse numeric, bras numeric,
+  note text default '',
+  created_at timestamptz not null default now()
+);
+
+-- Photos d'évolution (fichiers dans le stockage "photos")
+create table if not exists public.photos (
+  id uuid primary key default gen_random_uuid(),
+  client_id uuid not null references public.profiles(id) on delete cascade,
+  date date not null default current_date,
+  angle text default 'face',
+  path text not null,
+  created_at timestamptz not null default now()
+);
+
+-- Est-ce que la personne connectée est la coach ?
+create or replace function public.is_coach() returns boolean
+language sql stable security definer set search_path = public as $$
+  select exists(select 1 from public.profiles where id = auth.uid() and role = 'coach');
+$$;
+
+-- Création du profil à l'inscription, uniquement avec un code d'invitation valide
+create or replace function public.handle_new_user() returns trigger
+language plpgsql security definer set search_path = public as $$
+declare inv public.invitations%rowtype;
+begin
+  select * into inv from public.invitations
+   where upper(code) = upper(coalesce(new.raw_user_meta_data->>'code','')) and used_by is null
+   limit 1;
+  if not found then
+    raise exception 'Code invitation invalide ou deja utilise';
+  end if;
+  insert into public.profiles(id, nom, email, role)
+  values (new.id, coalesce(nullif(new.raw_user_meta_data->>'nom',''), inv.nom), new.email, inv.role);
+  update public.invitations set used_by = new.id, used_at = now() where id = inv.id;
+  return new;
+end; $$;
+
+drop trigger if exists on_auth_user_created on auth.users;
+create trigger on_auth_user_created after insert on auth.users
+  for each row execute function public.handle_new_user();
+
+-- Sécurité : chaque client ne voit que ses données, la coach voit tout
+alter table public.profiles enable row level security;
+alter table public.invitations enable row level security;
+alter table public.programmes enable row level security;
+alter table public.seances_faites enable row level security;
+alter table public.mesures enable row level security;
+alter table public.photos enable row level security;
+
+drop policy if exists p_profiles_sel on public.profiles;
+create policy p_profiles_sel on public.profiles for select using (id = auth.uid() or public.is_coach());
+drop policy if exists p_profiles_upd on public.profiles;
+create policy p_profiles_upd on public.profiles for update using (id = auth.uid() or public.is_coach());
+drop policy if exists p_profiles_del on public.profiles;
+create policy p_profiles_del on public.profiles for delete using (public.is_coach());
+
+drop policy if exists p_inv_all on public.invitations;
+create policy p_inv_all on public.invitations for all using (public.is_coach()) with check (public.is_coach());
+
+drop policy if exists p_prog_sel on public.programmes;
+create policy p_prog_sel on public.programmes for select using (client_id = auth.uid() or public.is_coach());
+drop policy if exists p_prog_write on public.programmes;
+create policy p_prog_write on public.programmes for all using (public.is_coach()) with check (public.is_coach());
+
+drop policy if exists p_sf_sel on public.seances_faites;
+create policy p_sf_sel on public.seances_faites for select using (client_id = auth.uid() or public.is_coach());
+drop policy if exists p_sf_ins on public.seances_faites;
+create policy p_sf_ins on public.seances_faites for insert with check (client_id = auth.uid());
+drop policy if exists p_sf_del on public.seances_faites;
+create policy p_sf_del on public.seances_faites for delete using (client_id = auth.uid() or public.is_coach());
+
+drop policy if exists p_m_sel on public.mesures;
+create policy p_m_sel on public.mesures for select using (client_id = auth.uid() or public.is_coach());
+drop policy if exists p_m_ins on public.mesures;
+create policy p_m_ins on public.mesures for insert with check (client_id = auth.uid() or public.is_coach());
+drop policy if exists p_m_del on public.mesures;
+create policy p_m_del on public.mesures for delete using (client_id = auth.uid() or public.is_coach());
+
+drop policy if exists p_ph_sel on public.photos;
+create policy p_ph_sel on public.photos for select using (client_id = auth.uid() or public.is_coach());
+drop policy if exists p_ph_ins on public.photos;
+create policy p_ph_ins on public.photos for insert with check (client_id = auth.uid());
+drop policy if exists p_ph_del on public.photos;
+create policy p_ph_del on public.photos for delete using (client_id = auth.uid() or public.is_coach());
+
+-- Stockage privé des photos (un dossier par client)
+insert into storage.buckets (id, name, public) values ('photos','photos', false)
+  on conflict (id) do nothing;
+
+drop policy if exists s_photos_sel on storage.objects;
+create policy s_photos_sel on storage.objects for select
+  using (bucket_id = 'photos' and ((storage.foldername(name))[1] = auth.uid()::text or public.is_coach()));
+drop policy if exists s_photos_ins on storage.objects;
+create policy s_photos_ins on storage.objects for insert
+  with check (bucket_id = 'photos' and (storage.foldername(name))[1] = auth.uid()::text);
+drop policy if exists s_photos_del on storage.objects;
+create policy s_photos_del on storage.objects for delete
+  using (bucket_id = 'photos' and ((storage.foldername(name))[1] = auth.uid()::text or public.is_coach()));
+
+-- Ton code coach, pour créer TON compte en premier (une seule utilisation)
+insert into public.invitations (code, nom, role) values ('COACH-675WPE', 'Maëva', 'coach')
+  on conflict (code) do nothing;
