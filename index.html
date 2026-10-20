@@ -180,6 +180,12 @@ nav.tabs button[aria-current="page"]{color:var(--accent)}
 .bdg.ok{opacity:1;filter:none;border-style:solid;background:var(--surface)}
 .bdg span{font-size:28px}.bdg small{font-size:11px;font-weight:600;line-height:1.25}
 .dt summary{cursor:pointer;color:var(--accent);font-weight:600}
+.sug{font-size:13px;font-weight:600;margin-top:6px;padding:7px 10px;border-radius:10px;background:var(--soft);color:var(--ink)}
+.sug.up{background:var(--ok-soft)}.sug.down{background:var(--warn-soft)}
+.pct{border-collapse:collapse;width:100%;font-size:13px;font-variant-numeric:tabular-nums}
+.pct th,.pct td{padding:8px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+.pct th:first-child,.pct td:first-child{text-align:left;white-space:normal;min-width:130px}
+.pct th{font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
 .err{color:var(--warn);font-size:14px;font-weight:600}
 .avatar{width:40px;height:40px;flex:none;border-radius:12px;display:grid;place-items:center;font-family:var(--display);font-weight:700;font-size:18px;background:var(--soft);color:var(--accent)}
 .back{border:0;background:none;color:var(--accent);font-weight:700;padding:0;font-size:15px}
@@ -349,8 +355,8 @@ function renderClient(){
 function doneFor(wk,si){return D.done.filter(function(d){return d.semaine===wk&&d.seance===si}).sort(function(a,b){return (b.done_at||"").localeCompare(a.done_at||"")})[0]}
 function exoHtml(x,i){
   var pills=[];if(x.series||x.reps)pills.push('<span class="pill main">'+esc(x.series&&x.reps?x.series+" × "+x.reps:(x.series?x.series+" séries":x.reps))+'</span>');
-  if(x.charge)pills.push('<span class="pill">'+esc(x.charge)+'</span>');if(x.repos)pills.push('<span class="pill">Repos '+esc(x.repos)+'</span>');
-  return '<div class="exo"><div class="n">'+String(i+1).padStart(2,"0")+'</div><div class="nm" style="display:flex;gap:8px;align-items:baseline"><span class="grow">'+esc(x.nom)+'</span><a class="demo" href="'+demoUrl(x.nom)+'" target="_blank" rel="noopener">▶ Démo</a></div>'+(pills.length?'<div class="pills">'+pills.join("")+'</div>':'')+(x.note?'<div class="note">'+esc(x.note)+'</div>':'')+'</div>';
+  var pr=presc(x,D);if(x.charge)pills.push('<span class="pill">'+esc(x.charge)+(pr&&pr.kg?' = '+fnum(pr.kg)+' kg':'')+'</span>');if(x.repos)pills.push('<span class="pill">Repos '+esc(x.repos)+'</span>');
+  return '<div class="exo"><div class="n">'+String(i+1).padStart(2,"0")+'</div><div class="nm" style="display:flex;gap:8px;align-items:baseline"><span class="grow">'+esc(x.nom)+'</span><a class="demo" href="'+demoUrl(x.nom)+'" target="_blank" rel="noopener">▶ Démo</a></div>'+(pills.length?'<div class="pills">'+pills.join("")+'</div>':'')+(x.note?'<div class="note">'+esc(x.note)+'</div>':'')+(function(){var sg=suggest(x,D);return sg?'<div class="sug '+sg.t+'">'+(sg.t==="up"?"📈 ":sg.t==="down"?"↘️ ":"➡️ ")+esc(sg.txt)+'</div>':''})()+'</div>';
 }
 function vSeances(){
   var p=D.prog,hr=new Date().getHours();
@@ -545,7 +551,7 @@ function vClient(){
   var c=C.clients.filter(function(x){return x.id===C.sel})[0]||{nom:"Client"},a=C.act;
   var head='<div><button class="back" id="back">‹ Clients</button></div><div style="display:flex;align-items:center;gap:12px"><div class="avatar">'+esc(initials(c.nom))+'</div><div class="grow"><div style="font-family:var(--display);font-weight:800;font-size:26px;text-transform:uppercase;line-height:1.05">'+esc(c.nom)+'</div><div class="s">'+esc(c.email||"")+'</div></div></div>'+
     '<div class="seg" role="group">'+[["prog","Programme"],["seances","Séances"],["suivi","Suivi"],["photos","Photos"]].concat(a&&a.ficheOk?[["infos","Infos santé"+(a.fiche&&parqYes(a.fiche.data)?" ⚠️":"")]]:[]).concat([["perfs","Perfs"]]).concat(a&&a.checkOk?[["bilans","Bilans"+(badCheck(lastCheck(a.checks))?" ⚠️":"")]]:[]).concat(a&&a.msgOk?[["msgs","Messages"+(a.msgs.some(function(m){return !m.from_coach&&!m.lu})?" •":"")]]:[]).map(function(t){return '<button data-ct="'+t[0]+'" aria-pressed="'+(C.selTab===t[0])+'">'+t[1]+'</button>'}).join("")+'</div>';
-  var body=!a?'<div class="empty">Chargement…</div>':({prog:cProg,seances:cSeances,suivi:function(){return imcHtml(a.mesures,a.fiche)+suiviHtml(a.mesures,false)},photos:function(){return photosHtml(a.photos,false)},infos:function(){return ficheHtml(a.fiche)+'<section><h2 class="sec">Besoins nutritionnels estimés</h2>'+nutriHtml(a.fiche,a.mesures,true)+'</section>'},perfs:function(){return perfsHtml(a.done)},bilans:function(){return checksHtml(a.checks)},msgs:function(){return msgsHtml(a.msgs,true,C.draft)}})[C.selTab]();
+  var body=!a?'<div class="empty">Chargement…</div>':({prog:cProg,seances:cSeances,suivi:function(){return imcHtml(a.mesures,a.fiche)+suiviHtml(a.mesures,false)},photos:function(){return photosHtml(a.photos,false)},infos:function(){return ficheHtml(a.fiche)+'<section><h2 class="sec">Besoins nutritionnels estimés</h2>'+nutriHtml(a.fiche,a.mesures,true)+'</section>'},perfs:function(){var ctx={done:a.done,fiche:a.fiche,mesures:a.mesures},ap=a.progs.filter(function(p){return p.actif})[0];return chargesHtml(ctx,ap).replace("Mes charges","Ses charges").replace("Complète ta fiche santé (sexe, taille, niveau) et ajoute une pesée : l'appli estimera tes charges. Elles s'affineront ensuite avec tes séances.","Il faut sa fiche santé (sexe, taille, niveau) et une pesée pour estimer ses charges.")+'<h2 class="sec" style="margin:8px 0 0">Historique par exercice</h2>'+perfsHtml(a.done)},bilans:function(){return checksHtml(a.checks)},msgs:function(){return msgsHtml(a.msgs,true,C.draft)}})[C.selTab]();
   $("view").innerHTML=head+body;
   $("back").onclick=function(){C.sel=null;C.act=null;tab="clients";render()};
   $("view").querySelectorAll("[data-ct]").forEach(function(b){b.onclick=function(){C.selTab=b.dataset.ct;render()}});
@@ -793,12 +799,12 @@ function startSession(si){
   try{navigator.wakeLock&&navigator.wakeLock.request("screen").then(function(w){wake=w}).catch(function(){})}catch(e){}
   var s=weeksOf(D.prog)[weekSel].seances[si];
   if(!SES||SES.wk!==weekSel||SES.si!==si){SES={wk:weekSel,si:si,log:{}};
-    (s.exos||[]).forEach(function(x,ei){var lp=lastPerf(x.nom),n=nSets(x),r=parseInt(x.reps,10);SES.log[ei]=Array.from({length:n},function(_,k){var prev=lp&&lp.sets[k];return {kg:prev&&prev.kg?prev.kg:(num(x.charge)||""),reps:isNaN(r)?(prev?prev.reps:""):r,done:false}})})}
+    (s.exos||[]).forEach(function(x,ei){var lp=lastPerf(x.nom),n=nSets(x),r=parseInt(x.reps,10),sg=suggest(x,D),pr=presc(x,D),base=sg?sg.kg:(pr&&pr.kg?pr.kg:null);SES.log[ei]=Array.from({length:n},function(_,k){var prev=lp&&lp.sets[k];return {kg:base!=null?base:(prev&&prev.kg?prev.kg:(pctOf(x.charge)?"":(num(x.charge)||""))),reps:isNaN(r)?(prev?prev.reps:""):r,done:false}})})}
   var body='<div class="timer" id="tmBox" hidden><div class="k">Repos</div><div class="tm" id="tmVal">0:00</div><div class="bar"><i id="tmBar"></i></div><div class="actions"><button class="btn sm" id="tmPlus">+15 s</button><button class="btn sm ghost" id="tmSkip">Passer</button></div></div>'+
    (s.echauffement?'<div class="ech" style="margin:0"><div class="ech-k">🔥 Échauffement</div><div>'+esc(s.echauffement)+'</div></div>':'')+
    '<div class="notice">Note ta charge et tes répétitions, puis valide la série ✓ : le chrono de repos se lance tout seul.</div>'+
    (s.exos||[]).map(function(x,ei){var rest=parseRest(x.repos),lp=lastPerf(x.nom);
-     return '<div class="panel pad"><div style="display:flex;gap:10px;align-items:baseline"><span class="n2">'+String(ei+1).padStart(2,"0")+'</span><div class="grow"><b>'+esc(x.nom)+'</b><div class="notice">'+esc([x.series&&x.reps?x.series+" × "+x.reps:x.reps,x.charge,x.repos?"repos "+x.repos:""].filter(Boolean).join(" · "))+'</div>'+(x.note?'<div class="notice">'+esc(x.note)+'</div>':'')+(lp?'<div class="last">Dernière fois : '+esc(setsTxt(lp.sets))+'</div>':'')+'</div><a class="demo" href="'+demoUrl(x.nom)+'" target="_blank" rel="noopener">▶ Démo</a></div>'+
+     return '<div class="panel pad"><div style="display:flex;gap:10px;align-items:baseline"><span class="n2">'+String(ei+1).padStart(2,"0")+'</span><div class="grow"><b>'+esc(x.nom)+'</b><div class="notice">'+esc([x.series&&x.reps?x.series+" × "+x.reps:x.reps,x.charge,x.repos?"repos "+x.repos:""].filter(Boolean).join(" · "))+'</div>'+(x.note?'<div class="notice">'+esc(x.note)+'</div>':'')+(lp?'<div class="s" style="margin-top:3px">Dernière fois : '+esc(setsTxt(lp.sets))+'</div>':'')+chargeHint(x,D)+'</div><a class="demo" href="'+demoUrl(x.nom)+'" target="_blank" rel="noopener">▶ Démo</a></div>'+
       '<div class="setrows"><div class="sh"><span>Série</span><span>Charge (kg)</span><span>Reps</span><span></span></div>'+SES.log[ei].map(function(st,k){return '<div class="sr'+(st.done?' on':'')+'"><span class="sn">'+(k+1)+'</span><input inputmode="decimal" data-lg="'+ei+'-'+k+'-kg" value="'+esc(st.kg)+'" placeholder="–" aria-label="Charge série '+(k+1)+'"><input inputmode="numeric" data-lg="'+ei+'-'+k+'-reps" value="'+esc(st.reps)+'" placeholder="–" aria-label="Répétitions série '+(k+1)+'"><button class="set'+(st.done?' on':'')+'" data-set="'+ei+'-'+k+'" data-rest="'+rest+'" aria-label="Valider la série">'+(st.done?'✓':'OK')+'</button></div>'}).join("")+'</div></div>'}).join("")+
    '<button class="btn primary block" id="sesEnd">Terminer la séance</button>';
   openSheet(s.nom||"Séance",body,function(b){
@@ -880,10 +886,56 @@ function vProgres(){D.sv=D.sv||"mesures";var segs=[["mesures","Mesures"],["photo
   var h='<div class="seg" role="group">'+segs.map(function(s){return '<button data-sv="'+s[0]+'" aria-pressed="'+(D.sv===s[0])+'">'+s[1]+'</button>'}).join("")+'</div>';
   if(D.sv==="mesures"){setTimeout(bindSuivi,0);h+=imcHtml(D.mesures,D.fiche)+suiviHtml(D.mesures,true)}
   else if(D.sv==="photos"){setTimeout(function(){bindPhotos();hydratePhotos(D.photos)},0);h+=photosHtml(D.photos,true)}
-  else if(D.sv==="perfs")h+=perfsHtml(D.done);
+  else if(D.sv==="perfs")h+=chargesHtml(D,D.prog)+'<h2 class="sec" style="margin:8px 0 0">Historique par exercice</h2>'+perfsHtml(D.done);
   else{h+='<button class="btn primary block" data-goc="checkin">+ Faire mon bilan de la semaine</button>'+checksHtml(D.checks)}
   return h}
 document.addEventListener("click",function(e){var t=e.target.closest("[data-sv]");if(!t)return;D.sv=t.dataset.sv;render()});
+
+/* =====================================================
+   AJOUTS v4 : % de 1RM, charges estimées, progression conseillée
+   ===================================================== */
+/* ratios 1RM / poids de corps pour un niveau "débutant entraîné" : [regex, nom, femme, homme, précision] */
+var STD=[[/mollet|planche|gainage|crunch|bird|dead bug|superman|étirement|marche|vélo|rameur|corde|jumping|burpee|mountain|genoux hauts|pont fessier|pompes|dips|traction|poids du corps|assis-debout|chaise|chat|posture|rotation/i,null],
+ [/bulgare|fente|step|montée/i,"Fentes",0.3,0.45,"total des 2 haltères"],[/goblet/i,"Squat goblet",0.4,0.55,"1 haltère / kettlebell"],
+ [/squat|presse/i,"Squat",0.75,1.25,"barre"],[/roumain|jambes tendues|good morning/i,"Soulevé de terre jambes tendues",0.6,0.9,"barre ou 2 haltères"],[/soulevé|deadlift/i,"Soulevé de terre",1,1.5,"barre"],[/hip thrust/i,"Hip thrust",1,1.5,"barre"],
+ [/développé couché|bench|chest press/i,"Développé couché",0.5,1,"barre"],[/militaire|développé épaules|overhead/i,"Développé épaules",0.35,0.55,"barre"],
+ [/un bras/i,"Rowing un bras",0.25,0.4,"par haltère"],[/rowing|tirage/i,"Rowing",0.45,0.75,"barre"],[/curl/i,"Curl",0.12,0.2,"par haltère"],
+ [/triceps|kickback|extension/i,"Triceps",0.08,0.12,"par haltère"],[/élévation|oiseau/i,"Élévations",0.06,0.1,"par haltère"],[/swing|kettlebell/i,"Swing",0.25,0.4,"kettlebell"],[/thruster/i,"Thruster",0.3,0.5,"total"]];
+var LVL={"Sédentaire":0.5,"Peu actif (moins d'1 fois / semaine)":0.65,"Actif (1 à 2 fois / semaine)":0.85,"Très actif (3 fois ou plus / semaine)":1};
+function stdOf(nom){for(var i=0;i<STD.length;i++)if(STD[i][0].test(nom||""))return STD[i][1]?STD[i]:null;return null}
+function rnd(kg){if(!kg||kg<0)return 0;var st=kg<10?0.5:kg<40?1:2.5;return Math.round(kg/st)*st}
+function pctOf(ch){var m=String(ch||"").match(/(\d+(?:[.,]\d+)?)\s*%/);return m?parseFloat(m[1].replace(",",".")):0}
+function ctxW(ctx){var w=(ctx.mesures||[]).filter(function(r){return r.poids}).slice(-1)[0];return w?+w.poids:0}
+function bwEst(nom,ctx){var s=stdOf(nom),d=(ctx.fiche&&ctx.fiche.data)||{},w=ctxW(ctx);if(!s||!d.sexe||!w)return null;
+  var t=num(d.taille);if(t&&t<3)t*=100;var ref=w;if(t){var imc=w/Math.pow(t/100,2);if(imc>30)ref=27*Math.pow(t/100,2)}
+  var age=d.naissance?Math.floor((Date.now()-pd(d.naissance))/31557600000):30,f=(LVL[d.niveau]||0.65)*(age>55?0.85:age>45?0.92:1);
+  return {rm:ref*(d.sexe==="Homme"?s[3]:s[2])*f,src:"estimation (poids, niveau, âge)",eq:s[4]}}
+function histRm(nom,ctx){var best=0,since=Date.now()-90*864e5;(ctx.done||[]).forEach(function(d){if(!d.details||!d.details.exos||new Date(d.done_at||0).getTime()<since)return;d.details.exos.forEach(function(e){if(e.nom!==nom)return;(e.sets||[]).forEach(function(s){var o=epley(s.kg,s.reps);if(o>best)best=o})})});return best}
+function rmFor(nom,ctx){var h=histRm(nom,ctx);if(h)return {rm:h,src:"tes séances (90 derniers jours)",eq:(stdOf(nom)||[])[4]};return bwEst(nom,ctx)}
+function repRange(r){var m=String(r||"").match(/(\d+)\s*(?:-|à)\s*(\d+)/);if(m)return [+m[1],+m[2]];var n=parseInt(r,10);return isNaN(n)?null:[n,n]}
+function isLower(nom){return /squat|presse|soulevé|deadlift|hip|pont|fente|bulgare|step|montée|good morning/i.test(nom||"")}
+/* progression : double progression (reps puis charge) */
+function suggest(x,ctx){var rr=repRange(x.reps);if(!rr)return null;var l=(ctx.done||[]).filter(function(d){return d.details&&d.details.exos}).sort(function(a,b){return (b.done_at||"").localeCompare(a.done_at||"")});
+  for(var i=0;i<l.length;i++){var e=l[i].details.exos.filter(function(y){return y.nom===x.nom})[0];if(!e)continue;var sets=(e.sets||[]).filter(function(s){return s.kg&&s.reps});if(!sets.length)return null;
+    var kg=Math.max.apply(null,sets.map(function(s){return +s.kg})),minR=Math.min.apply(null,sets.map(function(s){return +s.reps})),hard=(l[i].ressenti||0)>=9,n=nSets(x);
+    var inc=isLower(x.nom)?Math.max(2.5,kg*0.05):Math.max(1,kg*0.025),up=rnd(kg+inc),down=rnd(kg*0.9);
+    if(sets.length>=n&&minR>=rr[1]&&!hard)return {kg:up,t:"up",txt:"Tu as validé toutes tes séries à "+fnum(kg)+" kg : essaie "+fnum(up)+" kg. Si ça ne passe pas, reviens à "+fnum(kg)+" kg."};
+    if(minR<=rr[0]-2)return {kg:down,t:"down",txt:"La dernière fois c'était dur à "+fnum(kg)+" kg ("+minR+" reps) : reprends à "+fnum(down)+" kg et vise "+rr[0]+" reps propres."};
+    return {kg:kg,t:"keep",txt:"Garde "+fnum(kg)+" kg et vise "+rr[1]+" reps sur chaque série avant d'augmenter."+(hard?" (dernière séance notée très dure)":"")};}
+  return null}
+function presc(x,ctx){var p=pctOf(x.charge);if(!p)return null;var r=rmFor(x.nom,ctx);if(!r)return {p:p,kg:0};return {p:p,kg:rnd(r.rm*p/100),rm:r.rm,src:r.src,eq:r.eq}}
+function chargeHint(x,ctx){var h='',pr=presc(x,ctx),sg=suggest(x,ctx);
+  if(pr&&pr.kg)h+='<div class="last">🎯 '+fnum(pr.p)+' % de ton 1RM = <b>'+fnum(pr.kg)+' kg</b>'+(pr.eq?' ('+esc(pr.eq)+')':'')+'</div>';
+  else if(pr)h+='<div class="last">🎯 '+fnum(pr.p)+' % de ton 1RM : fais une série test pour qu\'on calcule ta charge.</div>';
+  if(sg)h+='<div class="sug '+sg.t+'">'+(sg.t==="up"?"📈 ":sg.t==="down"?"↘️ ":"➡️ ")+esc(sg.txt)+'</div>';
+  return h}
+function chargesHtml(ctx,prog){var names={};weeksOf(prog).forEach(function(w){(w.seances||[]).forEach(function(s){(s.exos||[]).forEach(function(x){if(x.nom)names[x.nom]=1})})});
+  (ctx.done||[]).forEach(function(d){(d.details&&d.details.exos||[]).forEach(function(e){names[e.nom]=1})});
+  var rows=Object.keys(names).map(function(n){return {n:n,r:rmFor(n,ctx)}}).filter(function(x){return x.r});
+  if(!rows.length)return '<div class="panel pad"><b>Mes charges</b><div class="notice">Complète ta fiche santé (sexe, taille, niveau) et ajoute une pesée : l\'appli estimera tes charges. Elles s\'affineront ensuite avec tes séances.</div></div>';
+  return '<section><h2 class="sec">Mes charges · % du 1RM</h2><div class="notice" style="margin-bottom:8px">1RM = charge maximale sur 1 répétition. Quand ta coach écrit « 70 % », l\'appli calcule la charge pour toi.</div><div class="panel"><div style="overflow-x:auto"><table class="pct"><tr><th>Exercice</th><th>1RM</th><th>60 %</th><th>70 %</th><th>75 %</th><th>80 %</th><th>85 %</th></tr>'+
+   rows.map(function(x){return '<tr><td><b>'+esc(x.n)+'</b><div class="s">'+(x.r.src.indexOf("séances")>-1?"✓ d'après tes séances":"≈ estimation de départ")+(x.r.eq?" · "+esc(x.r.eq):"")+'</div></td><td><b>'+fnum(rnd(x.r.rm))+'</b></td>'+[60,70,75,80,85].map(function(p){return '<td>'+fnum(rnd(x.r.rm*p/100))+'</td>'}).join("")+'</tr>'}).join("")+'</table></div></div>'+
+   '<div class="panel pad" style="margin-top:8px"><b>Repères</b><div class="notice">60-70 % : 12 à 15 reps (endurance, technique) · 70-80 % : 8 à 12 reps (muscle, tonification) · 80-90 % : 3 à 6 reps (force). Une estimation de départ se valide sur une première série facile.</div></div></section>'}
 
 boot();
 })();
