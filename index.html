@@ -76,6 +76,8 @@ h2.sec{font-family:var(--display);font-weight:700;font-size:15px;letter-spacing:
 .pill{font-size:13px;font-weight:700;padding:4px 10px;border-radius:999px;background:var(--soft);color:var(--accent);font-variant-numeric:tabular-nums}
 .pill.main{background:var(--accent);color:var(--accent-ink)}
 .exo .note{font-size:13px;color:var(--muted)}
+.ech{margin:4px 14px 12px;padding:12px 14px;border-radius:12px;background:var(--soft);border-left:4px solid var(--accent);white-space:pre-wrap;font-size:14px}
+.ech-k{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin-bottom:4px}
 .seance-f{padding:12px 14px;border-top:1px solid var(--line);display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .done-banner{display:flex;align-items:center;gap:8px;color:var(--ok);font-weight:700}
 .stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
@@ -303,9 +305,9 @@ function vSeances(){
   html+='<div><div style="font-family:var(--display);font-weight:800;font-size:22px;text-transform:uppercase">'+esc(p.titre)+'</div>'+(p.objectif?'<div class="notice">'+esc(p.objectif)+'</div>':'')+'</div>';
   html+='<div class="wk-tabs" role="group" aria-label="Semaines">'+ws.map(function(x,i){var all=(x.seances||[]).length&&(x.seances||[]).every(function(s,j){return doneFor(i,j)});return '<button class="wk'+(i===cw?' cur':'')+'" data-wk="'+i+'" aria-pressed="'+(i===weekSel)+'">S'+(i+1)+(all?' ✓':'')+'</button>'}).join("")+'</div>';
   html+='<div style="display:flex;align-items:baseline;gap:8px"><span style="font-family:var(--display);font-weight:800;font-size:26px;text-transform:uppercase">Semaine '+(weekSel+1)+'</span>'+(weekSel===cw?'<span class="chip">En cours</span>':'')+'<span class="grow"></span><span class="notice">'+nDone+' / '+ss.length+' faites</span></div>';
-  if(p.consignes)html+='<details class="cons"'+(weekSel===0&&!D.done.length?' open':'')+'><summary>Échauffement et consignes</summary><div style="margin-top:8px;white-space:pre-wrap">'+esc(p.consignes)+'</div></details>';
+  if(p.consignes)html+='<details class="cons"'+(weekSel===0&&!D.done.length?' open':'')+'><summary>Consignes générales</summary><div style="margin-top:8px;white-space:pre-wrap">'+esc(p.consignes)+'</div></details>';
   html+=ss.length?ss.map(function(s,i){var d=doneFor(weekSel,i);
-    return '<article class="seance"><div class="seance-h"><h3>'+esc(s.nom||"Séance "+(i+1))+'</h3>'+(d?'<span class="chip ok">Faite</span>':'')+'</div>'+(s.exos||[]).map(exoHtml).join("")+
+    return '<article class="seance"><div class="seance-h"><h3>'+esc(s.nom||"Séance "+(i+1))+'</h3>'+(d?'<span class="chip ok">Faite</span>':'')+'</div>'+(s.echauffement?'<div class="ech"><div class="ech-k">🔥 Échauffement</div><div>'+esc(s.echauffement)+'</div></div>':'')+(s.exos||[]).map(exoHtml).join("")+
      '<div class="seance-f">'+(d?'<div class="done-banner grow">✓ Faite le '+fdate(d.done_at)+(d.ressenti?' · ressenti '+d.ressenti+'/10':'')+'</div><button class="btn sm ghost" data-redo="'+i+'">Refaite</button>':'<button class="btn primary block" data-done="'+i+'">J\'ai fait cette séance</button>')+'</div></article>'}).join(""):'<div class="panel"><div class="empty">Pas de séance cette semaine.</div></div>';
   return html;
 }
