@@ -916,7 +916,7 @@ function rmFor(nom,ctx){var h=histRm(nom,ctx);if(h)return {rm:h,src:"tes séance
 function repRange(r){var m=String(r||"").match(/(\d+)\s*(?:-|à)\s*(\d+)/);if(m)return [+m[1],+m[2]];var n=parseInt(r,10);return isNaN(n)?null:[n,n]}
 function isLower(nom){return /squat|presse|soulevé|deadlift|hip|pont|fente|bulgare|step|montée|good morning/i.test(nom||"")}
 /* progression : double progression (reps puis charge) */
-function suggest(x,ctx){var rr=repRange(x.reps);if(!rr)return null;var l=(ctx.done||[]).filter(function(d){return d.details&&d.details.exos}).sort(function(a,b){return (b.done_at||"").localeCompare(a.done_at||"")});
+function suggest(x,ctx){if(pctOf(x.charge))return null;var rr=repRange(x.reps);if(!rr)return null;var l=(ctx.done||[]).filter(function(d){return d.details&&d.details.exos}).sort(function(a,b){return (b.done_at||"").localeCompare(a.done_at||"")});
   for(var i=0;i<l.length;i++){var e=l[i].details.exos.filter(function(y){return y.nom===x.nom})[0];if(!e)continue;var sets=(e.sets||[]).filter(function(s){return s.kg&&s.reps});if(!sets.length)return null;
     var kg=Math.max.apply(null,sets.map(function(s){return +s.kg})),minR=Math.min.apply(null,sets.map(function(s){return +s.reps})),hard=(l[i].ressenti||0)>=9,n=nSets(x);
     var inc=isLower(x.nom)?Math.max(2.5,kg*0.05):Math.max(1,kg*0.025),up=rnd(kg+inc),down=rnd(kg*0.9);
