@@ -16,12 +16,14 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Figtree:wght@400;500;600;700&display=swap">
 <style>
 :root{
+  --ss:#C9821F; --ss-soft:#F6E7CF;
   --bg:#EEF2F1; --surface:#FFFFFF; --ink:#13201F; --muted:#5C6B69; --line:#D6DEDC;
   --accent:#0E6B66; --accent-ink:#FFFFFF; --soft:#DCEBE9; --warn:#B4434A; --warn-soft:#F5DADB; --ok:#2E7D4F; --ok-soft:#DCEFE2;
   --display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif; --body:"Figtree",system-ui,-apple-system,"Segoe UI",sans-serif;
   color-scheme:light;
 }
 @media (prefers-color-scheme:dark){:root{
+  --ss:#E3A54B; --ss-soft:#3A2D18;
   --bg:#0E1615; --surface:#172221; --ink:#E6EEEC; --muted:#93A4A1; --line:#2A3836;
   --accent:#3DB3AB; --accent-ink:#06201E; --soft:#1C3532; --warn:#E07A80; --warn-soft:#3B2022; --ok:#5CC285; --ok-soft:#173023; color-scheme:dark}}
 *{box-sizing:border-box}
@@ -187,6 +189,10 @@ nav.tabs button[aria-current="page"]{color:var(--accent)}
 .pct th,.pct td{padding:8px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
 .pct th:first-child,.pct td:first-child{text-align:left;white-space:normal;min-width:130px}
 .pct th{font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.ssh{margin:10px 14px 0;padding:6px 10px;border-radius:8px;background:var(--ss-soft);color:var(--ss);font-size:12px;font-weight:800}
+.exo.ssx{border-left:4px solid var(--ss);border-top:0}.exo.ssx .n{color:var(--ss)}
+.panel.ssx{border-left:4px solid var(--ss)}
+.pill.ss{background:var(--ss-soft);color:var(--ss)}
 .err{color:var(--warn);font-size:14px;font-weight:600}
 .avatar{width:40px;height:40px;flex:none;border-radius:12px;display:grid;place-items:center;font-family:var(--display);font-weight:700;font-size:18px;background:var(--soft);color:var(--accent)}
 .back{border:0;background:none;color:var(--accent);font-weight:700;padding:0;font-size:15px}
@@ -354,10 +360,12 @@ function renderClient(){
   if(tab==="photos")hydratePhotos(D.photos);
 }
 function doneFor(wk,si){return D.done.filter(function(d){return d.semaine===wk&&d.seance===si}).sort(function(a,b){return (b.done_at||"").localeCompare(a.done_at||"")})[0]}
-function exoHtml(x,i){
+function exoLabels(exos){var out=[],n=0,l=0;(exos||[]).forEach(function(x,i){var prev=i>0&&exos[i-1].lien&&true,me=!!x.lien&&i<exos.length-1;
+  if(!prev){n++;l=0}if(prev||me){l++;out.push({lab:n+String.fromCharCode(64+l),grp:true,first:!prev,last:!me})}else out.push({lab:String(n).padStart(2,"0"),grp:false})});return out}
+function exoHtml(x,i,lb){lb=lb||{lab:String(i+1).padStart(2,"0")};
   var pills=[];if(x.series||x.reps)pills.push('<span class="pill main">'+esc(x.series&&x.reps?x.series+" × "+x.reps:(x.series?x.series+" séries":x.reps))+'</span>');
-  var pr=presc(x,D);if(x.charge)pills.push('<span class="pill">'+esc(x.charge)+(pr&&pr.kg?' = '+fnum(pr.kg)+' kg':'')+'</span>');if(x.repos)pills.push('<span class="pill">Repos '+esc(x.repos)+'</span>');
-  return '<div class="exo"><div class="n">'+String(i+1).padStart(2,"0")+'</div><div class="nm" style="display:flex;gap:8px;align-items:baseline"><span class="grow">'+esc(x.nom)+'</span><a class="demo" href="'+demoUrl(x.nom)+'" target="_blank" rel="noopener">▶ Démo</a></div>'+(pills.length?'<div class="pills">'+pills.join("")+'</div>':'')+(x.note?'<div class="note">'+esc(x.note)+'</div>':'')+(function(){var sg=suggest(x,D);return sg?'<div class="sug '+sg.t+'">'+(sg.t==="up"?"📈 ":sg.t==="down"?"↘️ ":"➡️ ")+esc(sg.txt)+'</div>':''})()+'</div>';
+  var pr=presc(x,D);if(x.charge)pills.push('<span class="pill">'+esc(x.charge)+(pr&&pr.kg?' = '+fnum(pr.kg)+' kg':'')+'</span>');if(lb.grp&&!lb.last)pills.push('<span class="pill ss">Enchaîne ↓</span>');else if(x.repos)pills.push('<span class="pill">Repos '+esc(x.repos)+'</span>');
+  return (lb.grp&&lb.first?'<div class="ssh">🔗 Superset · enchaîne les exercices sans repos, repos après le dernier</div>':'')+'<div class="exo'+(lb.grp?' ssx'+(lb.last?' sslast':''):'')+'"><div class="n">'+lb.lab+'</div><div class="nm" style="display:flex;gap:8px;align-items:baseline"><span class="grow">'+esc(x.nom)+'</span><a class="demo" href="'+demoUrl(x.nom)+'" target="_blank" rel="noopener">▶ Démo</a></div>'+(pills.length?'<div class="pills">'+pills.join("")+'</div>':'')+(x.note?'<div class="note">'+esc(x.note)+'</div>':'')+(function(){var sg=suggest(x,D);return sg?'<div class="sug '+sg.t+'">'+(sg.t==="up"?"📈 ":sg.t==="down"?"↘️ ":"➡️ ")+esc(sg.txt)+'</div>':''})()+'</div>';
 }
 function vSeances(){
   var p=D.prog,hr=new Date().getHours();
@@ -371,7 +379,7 @@ function vSeances(){
   html+='<div style="display:flex;align-items:baseline;gap:8px"><span style="font-family:var(--display);font-weight:800;font-size:26px;text-transform:uppercase">Semaine '+(weekSel+1)+'</span>'+(weekSel===cw?'<span class="chip">En cours</span>':'')+'<span class="grow"></span><span class="notice">'+nDone+' / '+ss.length+' faites</span></div>';
   if(p.consignes)html+='<details class="cons"'+(weekSel===0&&!D.done.length?' open':'')+'><summary>Consignes générales</summary><div style="margin-top:8px;white-space:pre-wrap">'+esc(p.consignes)+'</div></details>';
   html+=ss.length?ss.map(function(s,i){var d=doneFor(weekSel,i);
-    return '<article class="seance"><div class="seance-h"><h3>'+esc(s.nom||"Séance "+(i+1))+'</h3>'+(d?'<span class="chip ok">Faite</span>':'')+'</div>'+(s.echauffement?'<div class="ech"><div class="ech-k">🔥 Échauffement</div><div>'+esc(s.echauffement)+'</div></div>':'')+(s.exos||[]).map(exoHtml).join("")+
+    return '<article class="seance"><div class="seance-h"><h3>'+esc(s.nom||"Séance "+(i+1))+'</h3>'+(d?'<span class="chip ok">Faite</span>':'')+'</div>'+(s.echauffement?'<div class="ech"><div class="ech-k">🔥 Échauffement</div><div>'+esc(s.echauffement)+'</div></div>':'')+(function(Lb){return (s.exos||[]).map(function(x,j){return exoHtml(x,j,Lb[j])}).join("")})(exoLabels(s.exos))+
      '<div class="seance-f">'+(d?'<div class="done-banner grow">✓ Faite le '+fdate(d.done_at)+(d.ressenti?' · ressenti '+d.ressenti+'/10':'')+'</div><button class="btn sm ghost" data-redo="'+i+'">Refaite</button>':'<button class="btn primary" style="flex:1" data-start="'+i+'">▶ Démarrer</button><button class="btn" style="flex:1" data-done="'+i+'">Déjà faite</button>')+'</div></article>'}).join(""):'<div class="panel"><div class="empty">Pas de séance cette semaine.</div></div>';
   return html;
 }
@@ -804,13 +812,13 @@ function startSession(si){
   var body='<div class="timer" id="tmBox" hidden><div class="k">Repos</div><div class="tm" id="tmVal">0:00</div><div class="bar"><i id="tmBar"></i></div><div class="actions"><button class="btn sm" id="tmPlus">+15 s</button><button class="btn sm ghost" id="tmSkip">Passer</button></div></div>'+
    (s.echauffement?'<div class="ech" style="margin:0"><div class="ech-k">🔥 Échauffement</div><div>'+esc(s.echauffement)+'</div></div>':'')+
    '<div class="notice">Note ta charge et tes répétitions, puis valide la série ✓ : le chrono de repos se lance tout seul.</div>'+
-   (s.exos||[]).map(function(x,ei){var rest=parseRest(x.repos),lp=lastPerf(x.nom);
-     return '<div class="panel pad"><div style="display:flex;gap:10px;align-items:baseline"><span class="n2">'+String(ei+1).padStart(2,"0")+'</span><div class="grow"><b>'+esc(x.nom)+'</b><div class="notice">'+esc([x.series&&x.reps?x.series+" × "+x.reps:x.reps,x.charge,x.repos?"repos "+x.repos:""].filter(Boolean).join(" · "))+'</div>'+(x.note?'<div class="notice">'+esc(x.note)+'</div>':'')+(lp?'<div class="s" style="margin-top:3px">Dernière fois : '+esc(setsTxt(lp.sets))+'</div>':'')+chargeHint(x,D)+'</div><a class="demo" href="'+demoUrl(x.nom)+'" target="_blank" rel="noopener">▶ Démo</a></div>'+
-      '<div class="setrows"><div class="sh"><span>Série</span><span>Charge (kg)</span><span>Reps</span><span></span></div>'+SES.log[ei].map(function(st,k){return '<div class="sr'+(st.done?' on':'')+'"><span class="sn">'+(k+1)+'</span><input inputmode="decimal" data-lg="'+ei+'-'+k+'-kg" value="'+esc(st.kg)+'" placeholder="–" aria-label="Charge série '+(k+1)+'"><input inputmode="numeric" data-lg="'+ei+'-'+k+'-reps" value="'+esc(st.reps)+'" placeholder="–" aria-label="Répétitions série '+(k+1)+'"><button class="set'+(st.done?' on':'')+'" data-set="'+ei+'-'+k+'" data-rest="'+rest+'" aria-label="Valider la série">'+(st.done?'✓':'OK')+'</button></div>'}).join("")+'</div></div>'}).join("")+
+   (function(){var LB=exoLabels(s.exos);return (s.exos||[]).map(function(x,ei){var lb=LB[ei],chain=lb.grp&&!lb.last,rest=chain?0:parseRest(x.repos),lp=lastPerf(x.nom),nxt=chain?s.exos[ei+1].nom:"";
+     return (lb.grp&&lb.first?'<div class="ssh" style="margin:0">🔗 Superset : 1 série de chaque exercice à la suite, puis repos</div>':'')+'<div class="panel pad'+(lb.grp?' ssx':'')+'"><div style="display:flex;gap:10px;align-items:baseline"><span class="n2"'+(lb.grp?' style="color:var(--ss)"':'')+'>'+lb.lab+'</span><div class="grow"><b>'+esc(x.nom)+'</b><div class="notice">'+esc([x.series&&x.reps?x.series+" × "+x.reps:x.reps,x.charge,x.repos?"repos "+x.repos:""].filter(Boolean).join(" · "))+'</div>'+(x.note?'<div class="notice">'+esc(x.note)+'</div>':'')+(lp?'<div class="s" style="margin-top:3px">Dernière fois : '+esc(setsTxt(lp.sets))+'</div>':'')+chargeHint(x,D)+'</div><a class="demo" href="'+demoUrl(x.nom)+'" target="_blank" rel="noopener">▶ Démo</a></div>'+
+      '<div class="setrows"><div class="sh"><span>Série</span><span>Charge (kg)</span><span>Reps</span><span></span></div>'+SES.log[ei].map(function(st,k){return '<div class="sr'+(st.done?' on':'')+'"><span class="sn">'+(k+1)+'</span><input inputmode="decimal" data-lg="'+ei+'-'+k+'-kg" value="'+esc(st.kg)+'" placeholder="–" aria-label="Charge série '+(k+1)+'"><input inputmode="numeric" data-lg="'+ei+'-'+k+'-reps" value="'+esc(st.reps)+'" placeholder="–" aria-label="Répétitions série '+(k+1)+'"><button class="set'+(st.done?' on':'')+'" data-set="'+ei+'-'+k+'" data-rest="'+rest+'" data-next="'+esc(nxt)+'" aria-label="Valider la série">'+(st.done?'✓':'OK')+'</button></div>'}).join("")+'</div></div>'}).join("")})()+
    '<button class="btn primary block" id="sesEnd">Terminer la séance</button>';
   openSheet(s.nom||"Séance",body,function(b){
     b.addEventListener("input",function(e){var t=e.target.closest("[data-lg]");if(!t)return;var a=t.dataset.lg.split("-");SES.log[a[0]][a[1]][a[2]]=t.value.replace(",",".")});
-    b.addEventListener("click",function(e){var t=e.target.closest("[data-set]");if(!t)return;var a=t.dataset.set.split("-"),st=SES.log[a[0]][a[1]];st.done=!st.done;t.classList.toggle("on",st.done);t.textContent=st.done?"✓":"OK";t.parentNode.classList.toggle("on",st.done);if(st.done)startTimer(+t.dataset.rest)});
+    b.addEventListener("click",function(e){var t=e.target.closest("[data-set]");if(!t)return;var a=t.dataset.set.split("-"),st=SES.log[a[0]][a[1]];st.done=!st.done;t.classList.toggle("on",st.done);t.textContent=st.done?"✓":"OK";t.parentNode.classList.toggle("on",st.done);if(st.done){if(t.dataset.next){stopTimer();toast("➡️ Enchaîne : "+t.dataset.next)}else startTimer(+t.dataset.rest)}});
     b.querySelector("#sesEnd").onclick=function(){
       var det={exos:(s.exos||[]).map(function(x,ei){return {nom:x.nom,sets:SES.log[ei].filter(function(st){return st.done||st.kg||st.reps}).map(function(st){return {kg:num(st.kg)||null,reps:parseInt(st.reps,10)||null,ok:!!st.done}})}}).filter(function(e){return e.sets.length})};
       closeSheet();weekSel=SES.wk;var si2=SES.si;SES=null;markDone(si2,det.exos.length?det:null)};
