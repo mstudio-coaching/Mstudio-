@@ -193,6 +193,8 @@ nav.tabs button[aria-current="page"]{color:var(--accent)}
 .exo.ssx{border-left:4px solid var(--ss);border-top:0}.exo.ssx .n{color:var(--ss)}
 .panel.ssx{border-left:4px solid var(--ss)}
 .pill.ss{background:var(--ss-soft);color:var(--ss)}
+.res{background:var(--soft);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:2px}
+.form{display:flex;flex-direction:column;gap:12px}
 .err{color:var(--warn);font-size:14px;font-weight:600}
 .avatar{width:40px;height:40px;flex:none;border-radius:12px;display:grid;place-items:center;font-family:var(--display);font-weight:700;font-size:18px;background:var(--soft);color:var(--accent)}
 .back{border:0;background:none;color:var(--accent);font-weight:700;padding:0;font-size:15px}
@@ -497,7 +499,7 @@ document.addEventListener("click",function(e){var t=e.target.closest("[data-ph]"
 
 function vProfil(){
   setTimeout(function(){$("lo").onclick=function(){sb.auth.signOut()}},0);
-  return reussitesHtml()+'<div class="panel"><div class="row"><div class="avatar">'+esc(initials(prof.nom))+'</div><div class="grow"><div class="t">'+esc(prof.nom)+'</div><div class="s">'+esc(prof.email||me.email||"")+'</div></div></div></div>'+
+  return reussitesHtml()+'<button class="btn block" data-goc="tools">🧮 Calculateurs : 1RM, %, RIR, zones cardio</button>'+'<div class="panel"><div class="row"><div class="avatar">'+esc(initials(prof.nom))+'</div><div class="grow"><div class="t">'+esc(prof.nom)+'</div><div class="s">'+esc(prof.email||me.email||"")+'</div></div></div></div>'+
    '<div class="panel pad"><b>Installer l\'appli</b><p class="notice" style="margin:6px 0 0">Dans Safari : bouton Partager, puis « Sur l\'écran d\'accueil ». L\'appli s\'ouvre ensuite en plein écran comme une vraie appli.</p></div>'+
    (D.ficheOk?'<div class="panel"><div class="row"><div class="grow"><div class="t">Ma fiche santé</div><div class="s">'+(D.fiche?'Mise à jour le '+fdate(D.fiche.updated_at):'Pas encore remplie')+'</div></div><button class="btn sm '+(D.fiche?'':'primary')+'" data-goc="fiche">'+(D.fiche?'Modifier':'Remplir')+'</button></div></div>':'')+
    '<button class="btn ghost block" id="lo">Se déconnecter</button>';
@@ -674,7 +676,7 @@ function openFiche(){
       if(!o.consent){e.textContent="Coche la case de confirmation en bas pour enregistrer.";e.hidden=false;return}
       var btn=this;btn.disabled=true;
       sb.from("fiches").upsert({client_id:me.id,data:o,updated_at:new Date().toISOString()}).select().single().then(function(x){
-        if(x.error){btn.disabled=false;return err(x.error)}
+        if(x.error){btn.disabled=false;if(/schema cache|does not exist|relation/i.test(x.error.message||"")){e.textContent="La fiche santé n'est pas encore activée sur l'appli. Ta coach doit lancer une petite mise à jour : réessaie un peu plus tard.";e.hidden=false;notify("Fiche santé bloquée","Un client n'a pas pu enregistrer sa fiche : lance le script de mise à jour dans Supabase.",["warning"]);return}return err(x.error)}
         var firstTime=!D.fiche;D.fiche=x.data;closeSheet();toast("Fiche enregistrée");render();
         notify(first(prof.nom)+(firstTime?" a rempli sa fiche santé":" a mis à jour sa fiche santé"),parqYes(o)?"⚠️ Au moins une réponse OUI au questionnaire santé : pense au certificat médical.":"Questionnaire santé : tout est OK.",[parqYes(o)?"warning":"clipboard"]);
         if(parqYes(o))setTimeout(function(){toast("Tu as répondu « oui » : demande l'avis de ton médecin avant de commencer.")},2900);
@@ -742,6 +744,7 @@ function seancesExtras(){
 document.addEventListener("click",function(e){var t=e.target.closest("[data-goc]");if(!t)return;var g=t.dataset.goc;
   if(g==="fiche")openFiche();
   else if(g==="checkin")openCheckin();
+  else if(g==="tools")openClientTools();
   else if(g==="pesee"){tab="suivi";D.sv="mesures";render();setTimeout(function(){var a=$("addM");if(a)a.click()},60)}
   else{tab=g;render();window.scrollTo(0,0)}});
 
@@ -808,7 +811,7 @@ function startSession(si){
   try{navigator.wakeLock&&navigator.wakeLock.request("screen").then(function(w){wake=w}).catch(function(){})}catch(e){}
   var s=weeksOf(D.prog)[weekSel].seances[si];
   if(!SES||SES.wk!==weekSel||SES.si!==si){SES={wk:weekSel,si:si,log:{}};
-    (s.exos||[]).forEach(function(x,ei){var lp=lastPerf(x.nom),n=nSets(x),r=parseInt(x.reps,10),sg=suggest(x,D),pr=presc(x,D),base=sg?sg.kg:(pr&&pr.kg?pr.kg:null);SES.log[ei]=Array.from({length:n},function(_,k){var prev=lp&&lp.sets[k];return {kg:base!=null?base:(prev&&prev.kg?prev.kg:(pctOf(x.charge)?"":(num(x.charge)||""))),reps:isNaN(r)?(prev?prev.reps:""):r,done:false}})})}
+    (s.exos||[]).forEach(function(x,ei){var lp=lastPerf(x.nom),n=nSets(x),r=parseInt(x.reps,10),sg=suggest(x,D),pr=presc(x,D),base=sg?sg.kg:(pr&&pr.kg?pr.kg:null);SES.log[ei]=Array.from({length:n},function(_,k){var prev=lp&&lp.sets[k];return {kg:base!=null?base:(prev&&prev.kg?prev.kg:(pctOf(x.charge)||rirOf(x.charge)!=null?"":(num(x.charge)||""))),reps:isNaN(r)?(prev?prev.reps:""):r,done:false}})})}
   var body='<div class="timer" id="tmBox" hidden><div class="k">Repos</div><div class="tm" id="tmVal">0:00</div><div class="bar"><i id="tmBar"></i></div><div class="actions"><button class="btn sm" id="tmPlus">+15 s</button><button class="btn sm ghost" id="tmSkip">Passer</button></div></div>'+
    (s.echauffement?'<div class="ech" style="margin:0"><div class="ech-k">🔥 Échauffement</div><div>'+esc(s.echauffement)+'</div></div>':'')+
    '<div class="notice">Note ta charge et tes répétitions, puis valide la série ✓ : le chrono de repos se lance tout seul.</div>'+
@@ -856,7 +859,7 @@ function nutriCalc(d,poids){d=d||{};var age=d.naissance?Math.floor((Date.now()-p
   var kcal=Math.round(tdee*k/10)*10,prot=Math.round(pk*wRef),lip=Math.round(Math.max(0.8*w,kcal*0.25/9)),glu=Math.max(0,Math.round((kcal-prot*4-lip*9)/4));
   return {bmr:Math.round(bmr),tdee:Math.round(tdee),kcal:kcal,prot:prot,lip:lip,glu:glu,eau:(Math.round(w*0.033*10)/10),lab:lab,f:f}}
 function nutriHtml(fiche,rows,isCoach){var w=(rows||[]).filter(function(r){return r.poids}).slice(-1)[0],n=nutriCalc(fiche&&fiche.data,w&&w.poids);
-  if(n.miss)return '<div class="panel pad"><b>Calcul des besoins</b><p class="notice">Il manque : '+n.miss.join(", ")+'.'+(isCoach?'':' Complète ta fiche santé (Profil) et ajoute une pesée dans Progrès.')+'</p>'+(isCoach?'':'<button class="btn primary" data-goc="fiche">Compléter ma fiche</button>')+'</div>';
+  if(n.miss)return '<div class="panel pad"><b>Calcul des besoins</b><p class="notice">Il manque : '+n.miss.join(", ")+'.'+(isCoach?'':' Complète ta fiche santé (Profil) et ajoute une pesée dans Progrès.')+'</p>'+(isCoach||!D.ficheOk?'':'<button class="btn primary" data-goc="fiche">Compléter ma fiche</button>')+'</div>';
   var tot=n.prot*4+n.lip*9+n.glu*4,pc=function(x){return Math.round(x/tot*100)};
   return '<div class="panel pad"><div class="k">Objectif calorique · '+n.lab+'</div><div class="big" style="font-size:44px">'+n.kcal.toLocaleString("fr-FR")+' <span style="font-size:20px">kcal / jour</span></div>'+
    '<div class="macro"><i style="width:'+pc(n.prot*4)+'%;background:var(--accent)"></i><i style="width:'+pc(n.glu*4)+'%;background:#C9821F"></i><i style="width:'+pc(n.lip*9)+'%;background:#7A4C9E"></i></div>'+
@@ -895,7 +898,7 @@ function vProgres(){D.sv=D.sv||"mesures";var segs=[["mesures","Mesures"],["photo
   var h='<div class="seg" role="group">'+segs.map(function(s){return '<button data-sv="'+s[0]+'" aria-pressed="'+(D.sv===s[0])+'">'+s[1]+'</button>'}).join("")+'</div>';
   if(D.sv==="mesures"){setTimeout(bindSuivi,0);h+=imcHtml(D.mesures,D.fiche)+suiviHtml(D.mesures,true)}
   else if(D.sv==="photos"){setTimeout(function(){bindPhotos();hydratePhotos(D.photos)},0);h+=photosHtml(D.photos,true)}
-  else if(D.sv==="perfs")h+=chargesHtml(D,D.prog)+'<h2 class="sec" style="margin:8px 0 0">Historique par exercice</h2>'+perfsHtml(D.done);
+  else if(D.sv==="perfs")h+='<button class="btn primary block" data-goc="tools">🧮 Calculateurs : 1RM, %, RIR, zones cardio</button>'+chargesHtml(D,D.prog)+'<h2 class="sec" style="margin:8px 0 0">Historique par exercice</h2>'+perfsHtml(D.done);
   else{h+='<button class="btn primary block" data-goc="checkin">+ Faire mon bilan de la semaine</button>'+checksHtml(D.checks)}
   return h}
 document.addEventListener("click",function(e){var t=e.target.closest("[data-sv]");if(!t)return;D.sv=t.dataset.sv;render()});
@@ -924,7 +927,7 @@ function rmFor(nom,ctx){var h=histRm(nom,ctx);if(h)return {rm:h,src:"tes séance
 function repRange(r){var m=String(r||"").match(/(\d+)\s*(?:-|à)\s*(\d+)/);if(m)return [+m[1],+m[2]];var n=parseInt(r,10);return isNaN(n)?null:[n,n]}
 function isLower(nom){return /squat|presse|soulevé|deadlift|hip|pont|fente|bulgare|step|montée|good morning/i.test(nom||"")}
 /* progression : double progression (reps puis charge) */
-function suggest(x,ctx){if(pctOf(x.charge))return null;var rr=repRange(x.reps);if(!rr)return null;var l=(ctx.done||[]).filter(function(d){return d.details&&d.details.exos}).sort(function(a,b){return (b.done_at||"").localeCompare(a.done_at||"")});
+function suggest(x,ctx){if(pctOf(x.charge)||rirOf(x.charge)!=null)return null;var rr=repRange(x.reps);if(!rr)return null;var l=(ctx.done||[]).filter(function(d){return d.details&&d.details.exos}).sort(function(a,b){return (b.done_at||"").localeCompare(a.done_at||"")});
   for(var i=0;i<l.length;i++){var e=l[i].details.exos.filter(function(y){return y.nom===x.nom})[0];if(!e)continue;var sets=(e.sets||[]).filter(function(s){return s.kg&&s.reps});if(!sets.length)return null;
     var kg=Math.max.apply(null,sets.map(function(s){return +s.kg})),minR=Math.min.apply(null,sets.map(function(s){return +s.reps})),hard=(l[i].ressenti||0)>=9,n=nSets(x);
     var inc=isLower(x.nom)?Math.max(2.5,kg*0.05):Math.max(1,kg*0.025),up=rnd(kg+inc),down=rnd(kg*0.9);
@@ -932,19 +935,51 @@ function suggest(x,ctx){if(pctOf(x.charge))return null;var rr=repRange(x.reps);i
     if(minR<=rr[0]-2)return {kg:down,t:"down",txt:"La dernière fois c'était dur à "+fnum(kg)+" kg ("+minR+" reps) : reprends à "+fnum(down)+" kg et vise "+rr[0]+" reps propres."};
     return {kg:kg,t:"keep",txt:"Garde "+fnum(kg)+" kg et vise "+rr[1]+" reps sur chaque série avant d'augmenter."+(hard?" (dernière séance notée très dure)":"")};}
   return null}
-function presc(x,ctx){var p=pctOf(x.charge);if(!p)return null;var r=rmFor(x.nom,ctx);if(!r)return {p:p,kg:0};return {p:p,kg:rnd(r.rm*p/100),rm:r.rm,src:r.src,eq:r.eq}}
+function presc(x,ctx){var p=pctOf(x.charge),lab=p?fnum(p)+" % de ton 1RM":"";if(!p){var ri=rirOf(x.charge),rr=repRange(x.reps);if(ri==null||!rr)return null;p=pctFromRir(rr[1],ri);lab=rr[1]+" reps à RIR "+fnum(ri)+" ≈ "+Math.round(p)+" % de ton 1RM"}
+  var r=rmFor(x.nom,ctx);if(!r)return {p:p,kg:0,lab:lab};return {p:p,kg:rnd(r.rm*p/100),rm:r.rm,src:r.src,eq:r.eq,lab:lab}}
 function chargeHint(x,ctx){var h='',pr=presc(x,ctx),sg=suggest(x,ctx);
-  if(pr&&pr.kg)h+='<div class="last">🎯 '+fnum(pr.p)+' % de ton 1RM = <b>'+fnum(pr.kg)+' kg</b>'+(pr.eq?' ('+esc(pr.eq)+')':'')+'</div>';
-  else if(pr)h+='<div class="last">🎯 '+fnum(pr.p)+' % de ton 1RM : fais une série test pour qu\'on calcule ta charge.</div>';
+  if(pr&&pr.kg)h+='<div class="last">🎯 '+esc(pr.lab)+' = <b>'+fnum(pr.kg)+' kg</b>'+(pr.eq?' ('+esc(pr.eq)+')':'')+'</div>';
+  else if(pr)h+='<div class="last">🎯 '+esc(pr.lab)+' : fais une série test pour qu\'on calcule ta charge.</div>';
   if(sg)h+='<div class="sug '+sg.t+'">'+(sg.t==="up"?"📈 ":sg.t==="down"?"↘️ ":"➡️ ")+esc(sg.txt)+'</div>';
   return h}
 function chargesHtml(ctx,prog){var names={};weeksOf(prog).forEach(function(w){(w.seances||[]).forEach(function(s){(s.exos||[]).forEach(function(x){if(x.nom)names[x.nom]=1})})});
   (ctx.done||[]).forEach(function(d){(d.details&&d.details.exos||[]).forEach(function(e){names[e.nom]=1})});
   var rows=Object.keys(names).map(function(n){return {n:n,r:rmFor(n,ctx)}}).filter(function(x){return x.r});
   if(!rows.length)return '<div class="panel pad"><b>Mes charges</b><div class="notice">Complète ta fiche santé (sexe, taille, niveau) et ajoute une pesée : l\'appli estimera tes charges. Elles s\'affineront ensuite avec tes séances.</div></div>';
-  return '<section><h2 class="sec">Mes charges · % du 1RM</h2><div class="notice" style="margin-bottom:8px">1RM = charge maximale sur 1 répétition. Quand ta coach écrit « 70 % », l\'appli calcule la charge pour toi.</div><div class="panel"><div style="overflow-x:auto"><table class="pct"><tr><th>Exercice</th><th>1RM</th><th>60 %</th><th>70 %</th><th>75 %</th><th>80 %</th><th>85 %</th></tr>'+
+  return '<section><h2 class="sec">Mes charges · % du 1RM</h2><div class="notice" style="margin-bottom:8px">1RM = charge maximale sur 1 répétition. Quand ta coach écrit « 70 % » ou « RIR 2 », l\'appli calcule la charge pour toi.</div><div class="panel"><div style="overflow-x:auto"><table class="pct"><tr><th>Exercice</th><th>1RM</th><th>60 %</th><th>70 %</th><th>75 %</th><th>80 %</th><th>85 %</th></tr>'+
    rows.map(function(x){return '<tr><td><b>'+esc(x.n)+'</b><div class="s">'+(x.r.src.indexOf("séances")>-1?"✓ d'après tes séances":"≈ estimation de départ")+(x.r.eq?" · "+esc(x.r.eq):"")+'</div></td><td><b>'+fnum(rnd(x.r.rm))+'</b></td>'+[60,70,75,80,85].map(function(p){return '<td>'+fnum(rnd(x.r.rm*p/100))+'</td>'}).join("")+'</tr>'}).join("")+'</table></div></div>'+
-   '<div class="panel pad" style="margin-top:8px"><b>Repères</b><div class="notice">60-70 % : 12 à 15 reps (endurance, technique) · 70-80 % : 8 à 12 reps (muscle, tonification) · 80-90 % : 3 à 6 reps (force). Une estimation de départ se valide sur une première série facile.</div></div></section>'}
+   '<div class="panel pad" style="margin-top:8px"><b>Repères</b><div class="notice">RIR 2 = tu finis la série en pouvant encore en faire 2 (RPE 8). 60-70 % : 12 à 15 reps (endurance, technique) · 70-80 % : 8 à 12 reps (muscle, tonification) · 80-90 % : 3 à 6 reps (force). Une estimation de départ se valide sur une première série facile.</div></div></section>'}
+
+/* =====================================================
+   AJOUTS v5 : RIR / RPE, calculateurs pour les élèves
+   ===================================================== */
+function rirOf(ch){ch=String(ch||"");var m=ch.match(/RIR\s*(\d+(?:[.,]5)?)/i);if(m)return parseFloat(m[1].replace(",","."));m=ch.match(/RPE\s*(\d+(?:[.,]5)?)/i);if(m)return Math.max(0,10-parseFloat(m[1].replace(",",".")));return null}
+function pctFromRir(reps,rir){return 100/(1+(reps+rir)/30)}
+function openClientTools(){
+  var T=[["rm","Mon 1RM"],["pct","% → charge"],["rir","RIR / RPE"],["fc","Zones cardio"]],cur="rm",ctx=D;
+  var ex={};weeksOf(D.prog).forEach(function(w){(w.seances||[]).forEach(function(s){(s.exos||[]).forEach(function(x){var r=rmFor(x.nom,ctx);if(r)ex[x.nom]=r.rm})})});
+  var exOpts='<option value="">Saisir mon 1RM moi-même</option>'+Object.keys(ex).map(function(n){return '<option value="'+ex[n]+'">'+esc(n)+' (≈ '+fnum(rnd(ex[n]))+' kg)</option>'}).join("");
+  function inp(id,l,ph){return '<div class="f"><label for="'+id+'">'+l+'</label><input id="'+id+'" inputmode="decimal" placeholder="'+(ph||"")+'"></div>'}
+  var d=(D.fiche&&D.fiche.data)||{},age=d.naissance?Math.floor((Date.now()-pd(d.naissance))/31557600000):"";
+  var V={
+   rm:'<div class="notice">Indique une série que tu as faite (charge et répétitions jusqu\'à presque l\'échec) : on calcule ta charge max sur 1 répétition.</div><div class="frow">'+inp("c_kg","Charge (kg)","20")+inp("c_r","Répétitions","10")+'</div>'+inp("c_rir","Reps encore possibles (RIR, facultatif)","2")+'<div id="c_out"></div>',
+   pct:'<div class="f"><label for="c_ex">Exercice</label><select id="c_ex">'+exOpts+'</select></div>'+inp("c_rm","Ou ton 1RM (kg)","40")+inp("c_p","Pourcentage demandé (%)","70")+'<div id="c_out"></div>',
+   rir:'<div class="notice"><b>RIR</b> = répétitions encore possibles à la fin de la série (RIR 2 : tu pourrais en faire 2 de plus). <b>RPE</b> = effort ressenti sur 10 (RPE 8 = RIR 2).</div><div class="f"><label for="c_ex">Exercice</label><select id="c_ex">'+exOpts+'</select></div>'+inp("c_rm","Ou ton 1RM (kg)","40")+'<div class="frow">'+inp("c_r","Répétitions à faire","10")+inp("c_rir","RIR visé","2")+'</div><div id="c_out"></div>',
+   fc:'<div class="frow">'+inp("c_age","Âge",String(age||"35"))+inp("c_rep","FC de repos (facultatif)","65")+'</div><div id="c_out"></div><div class="notice">Prends ton pouls au réveil, allongé, sur 15 s × 4 pour la FC de repos.</div>'
+  };
+  function g(b,id){var e=b.querySelector("#"+id);return e?parseFloat(String(e.value).replace(",",".")):NaN}
+  function rmIn(b){var s=b.querySelector("#c_ex"),v=g(b,"c_rm");return v||(s&&+s.value)||0}
+  function tbl(rm){return '<table class="pct"><tr><th>%</th><th>Charge</th><th>Reps possibles</th></tr>'+[95,90,85,80,75,70,65,60,50].map(function(p){return '<tr><td>'+p+' %</td><td><b>'+fnum(rnd(rm*p/100))+' kg</b></td><td>≈ '+Math.max(1,Math.round(30*(100/p-1)))+'</td></tr>'}).join("")+'</table>'}
+  function calc(b){var o=b.querySelector("#c_out"),h="";
+    if(cur==="rm"){var kg=g(b,"c_kg"),r=g(b,"c_r"),rir=g(b,"c_rir")||0;if(kg&&r){var rm=epley(kg,r+rir);h='<div class="res"><div class="k">Ton 1RM estimé</div><div class="big">'+fnum(rnd(rm))+' kg</div><div class="notice">'+fnum(kg)+' kg × '+r+' reps'+(rir?' avec '+rir+' en réserve':'')+' (formule d\'Epley)</div></div>'+tbl(rm)}}
+    else if(cur==="pct"){var rm2=rmIn(b),p=g(b,"c_p");if(rm2&&p)h='<div class="res"><div class="k">'+fnum(p)+' % de '+fnum(rnd(rm2))+' kg</div><div class="big">'+fnum(rnd(rm2*p/100))+' kg</div><div class="notice">Environ '+Math.max(1,Math.round(30*(100/p-1)))+' répétitions possibles à cette charge.</div></div>';else if(rm2)h=tbl(rm2)}
+    else if(cur==="rir"){var rm3=rmIn(b),r3=g(b,"c_r"),ri=g(b,"c_rir");if(rm3&&r3&&!isNaN(ri)){var pc=pctFromRir(r3,ri);h='<div class="res"><div class="k">'+r3+' reps à RIR '+fnum(ri)+' (RPE '+fnum(10-ri)+')</div><div class="big">'+fnum(rnd(rm3*pc/100))+' kg</div><div class="notice">≈ '+Math.round(pc)+' % de ton 1RM. Si tu finis avec plus de '+fnum(ri)+' reps en réserve, augmente ; si tu échoues avant, baisse.</div></div>'}}
+    else{var a=g(b,"c_age"),rp=g(b,"c_rep");if(a){var mx=Math.round(208-0.7*a);h='<div class="res"><div class="k">Ta FC max estimée</div><div class="big">'+mx+' bpm</div></div><table class="pct"><tr><th>Zone</th><th>bpm</th></tr>'+[["Récupération",50,60],["Endurance / brûle-graisse",60,70],["Aérobie",70,80],["Seuil",80,90],["Max",90,100]].map(function(z){var lo=rp?rp+(mx-rp)*z[1]/100:mx*z[1]/100,hi=rp?rp+(mx-rp)*z[2]/100:mx*z[2]/100;return '<tr><td>'+z[0]+' ('+z[1]+'-'+z[2]+' %)</td><td><b>'+Math.round(lo)+'-'+Math.round(hi)+'</b></td></tr>'}).join("")+'</table>'}}
+    o.innerHTML=h}
+  openSheet("Calculateurs",'<div class="seg" role="group">'+T.map(function(t){return '<button data-ct2="'+t[0]+'" aria-pressed="'+(t[0]===cur)+'">'+t[1]+'</button>'}).join("")+'</div><div id="c_body" class="form">'+V[cur]+'</div>',function(b){
+    b.addEventListener("click",function(e){var t=e.target.closest("[data-ct2]");if(!t)return;cur=t.dataset.ct2;b.querySelector("#c_body").innerHTML=V[cur];b.querySelectorAll("[data-ct2]").forEach(function(x){x.setAttribute("aria-pressed",String(x===t))});calc(b)});
+    b.addEventListener("input",function(){calc(b)});b.addEventListener("change",function(){calc(b)});calc(b)});
+}
 
 boot();
 })();
