@@ -223,6 +223,17 @@ nav.tabs button[aria-current="page"]{color:var(--accent)}
 .lnk{border:1px dashed var(--line);background:none;border-radius:8px;padding:7px;font-size:13px;font-weight:600;color:var(--muted)}.lnk.on{border-style:solid;border-color:var(--ss);background:var(--ss-soft);color:var(--ss)}
 .wk.add{border-style:dashed;color:var(--accent)}
 .sel{user-select:all;-webkit-user-select:all}
+.hab{display:flex;flex-direction:column;gap:8px}
+.hb{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:10px;background:var(--bg)}.hb.ok{background:var(--ok-soft)}
+.hi{font-size:20px;width:26px;text-align:center}.hb .s{font-size:12px}
+.st{width:34px;height:34px;border-radius:10px;border:1px solid var(--line);background:var(--surface);font-size:18px;font-weight:700}
+.hv{min-width:48px;text-align:center;font-variant-numeric:tabular-nums}
+.tg{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:7px 12px;font-weight:700;font-size:13px}.tg.on{background:var(--ok);border-color:var(--ok);color:#fff}
+.meals{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.meal{overflow:hidden;display:flex;flex-direction:column}.mp{aspect-ratio:1;max-width:100%;background:var(--line)}.mp img{width:100%;height:100%;object-fit:cover;display:block}
+.cmt{font-size:13px;background:var(--soft);border-radius:8px;padding:6px 8px}
+.demo.vid{border:0;background:var(--accent);color:var(--accent-ink)}
+.vbox{background:var(--surface);border-radius:16px;overflow:hidden;width:min(94vw,520px);max-height:90%}.vbox video{width:100%;max-height:75vh;display:block;background:#000}
 .err{color:var(--warn);font-size:14px;font-weight:600}
 .avatar{width:40px;height:40px;flex:none;border-radius:12px;display:grid;place-items:center;font-family:var(--display);font-weight:700;font-size:18px;background:var(--soft);color:var(--accent)}
 .back{border:0;background:none;color:var(--accent);font-weight:700;padding:0;font-size:15px}
@@ -395,7 +406,7 @@ function exoLabels(exos){var out=[],n=0,l=0;(exos||[]).forEach(function(x,i){var
 function exoHtml(x,i,lb){lb=lb||{lab:String(i+1).padStart(2,"0")};
   var pills=[];if(x.series||x.reps)pills.push('<span class="pill main">'+esc(x.series&&x.reps?x.series+" × "+x.reps:(x.series?x.series+" séries":x.reps))+'</span>');
   var pr=presc(x,D);if(x.charge)pills.push('<span class="pill">'+esc(x.charge)+(pr&&pr.kg?' = '+fnum(pr.kg)+' kg':'')+'</span>');if(lb.grp&&!lb.last)pills.push('<span class="pill ss">Enchaîne ↓</span>');else if(x.repos)pills.push('<span class="pill">Repos '+esc(x.repos)+'</span>');
-  return (lb.grp&&lb.first?'<div class="ssh">🔗 Superset · enchaîne les exercices sans repos, repos après le dernier</div>':'')+'<div class="exo'+(lb.grp?' ssx'+(lb.last?' sslast':''):'')+'"><div class="n">'+lb.lab+'</div><div class="nm" style="display:flex;gap:8px;align-items:baseline"><span class="grow">'+esc(x.nom)+'</span><a class="demo" href="'+demoUrl(x.nom)+'" target="_blank" rel="noopener">▶ Démo</a></div>'+(pills.length?'<div class="pills">'+pills.join("")+'</div>':'')+(x.note?'<div class="note">'+esc(x.note)+'</div>':'')+(function(){var sg=suggest(x,D);return sg?'<div class="sug '+sg.t+'">'+(sg.t==="up"?"📈 ":sg.t==="down"?"↘️ ":"➡️ ")+esc(sg.txt)+'</div>':''})()+'</div>';
+  return (lb.grp&&lb.first?'<div class="ssh">🔗 Superset · enchaîne les exercices sans repos, repos après le dernier</div>':'')+'<div class="exo'+(lb.grp?' ssx'+(lb.last?' sslast':''):'')+'"><div class="n">'+lb.lab+'</div><div class="nm" style="display:flex;gap:8px;align-items:baseline"><span class="grow">'+esc(x.nom)+'</span>'+demoBtn(x.nom)+'</div>'+(pills.length?'<div class="pills">'+pills.join("")+'</div>':'')+(x.note?'<div class="note">'+esc(x.note)+'</div>':'')+(function(){var sg=suggest(x,D);return sg?'<div class="sug '+sg.t+'">'+(sg.t==="up"?"📈 ":sg.t==="down"?"↘️ ":"➡️ ")+esc(sg.txt)+'</div>':''})()+'</div>';
 }
 function vSeances(){
   var p=D.prog,hr=new Date().getHours();
@@ -752,14 +763,16 @@ function loadClientExtras(){
     sb.from("fiches").select("*").eq("client_id",me.id).maybeSingle(),
     sb.from("messages").select("*").eq("client_id",me.id).order("created_at",{ascending:true}),
     sb.from("checkins").select("*").eq("client_id",me.id).order("created_at",{ascending:true}),
-    sb.from("coach_items").select("*").eq("client_id",me.id)
-  ]).then(function(r){D.ci=(r[3]&&r[3].data)||[];D.ficheOk=!r[0].error;D.fiche=r[0].data||null;D.msgOk=!r[1].error;D.msgs=r[1].data||[];D.checkOk=!r[2].error;D.checks=r[2].data||[];render()}).catch(function(){});
+    sb.from("coach_items").select("*"),
+    sb.from("habitudes").select("*").eq("client_id",me.id).order("date",{ascending:true}),
+    sb.from("repas").select("*").eq("client_id",me.id).order("created_at",{ascending:true})
+  ]).then(function(r){D.ci=(r[3]&&r[3].data)||[];D.habOk=!r[4].error;D.habs=r[4].data||[];D.repasOk=!r[5].error;D.repas=r[5].data||[];D.ficheOk=!r[0].error;D.fiche=r[0].data||null;D.msgOk=!r[1].error;D.msgs=r[1].data||[];D.checkOk=!r[2].error;D.checks=r[2].data||[];render()}).catch(function(){});
 }
 function streak(){var p=D.prog;if(!p)return 0;var ws=weeksOf(p),cw=curWeek(p),n=0;
   function full(i){var ss=(ws[i]&&ws[i].seances)||[];return ss.length&&ss.every(function(s,j){return doneFor(i,j)})}
   var i=full(cw)?cw:cw-1;while(i>=0&&full(i)){n++;i--}return n}
 function seancesExtras(){
-  var ex=clientRdvHtml(),p=D.prog;
+  var ex=clientRdvHtml()+habitsCard(),p=D.prog;
   var unread=(D.msgs||[]).filter(function(m){return m.from_coach&&!m.lu}).length;
   if(unread)ex+='<button class="panel pad alert tap-panel" data-goc="messages"><b>💬 '+unread+' nouveau'+(unread>1?'x':'')+' message'+(unread>1?'s':'')+' de ta coach</b><span class="notice">Appuie pour lire</span></button>';
   if(D.ficheOk&&!D.fiche)ex+='<div class="panel pad alert"><b>Remplis ta fiche santé</b><div class="notice" style="margin:4px 0 10px">2 minutes pour que ta coach adapte ton programme en toute sécurité.</div><button class="btn primary block" data-goc="fiche">Remplir ma fiche</button></div>';
@@ -800,8 +813,9 @@ function coachExtras(){
     sb.from("mesures").select("client_id,date"),
     sb.from("fiches").select("client_id,data,updated_at"),
     sb.from("messages").select("client_id").eq("from_coach",false).eq("lu",false),
-    sb.from("checkins").select("*").order("created_at",{ascending:true})
-  ]).then(function(r){C.lastChk={};(r[5].data||[]).forEach(function(c){C.lastChk[c.client_id]=c});
+    sb.from("checkins").select("*").order("created_at",{ascending:true}),
+    sb.from("repas").select("client_id").eq("comment","")
+  ]).then(function(r){C.repasTodo={};(r[6]&&r[6].data||[]).forEach(function(x){C.repasTodo[x.client_id]=(C.repasTodo[x.client_id]||0)+1});C.lastChk={};(r[5].data||[]).forEach(function(c){C.lastChk[c.client_id]=c});
     C.progs={};(r[0].data||[]).forEach(function(p){C.progs[p.client_id]=p});
     C.sfAll=r[1].data||[];C.lastM={};(r[2].data||[]).forEach(function(m){if(!C.lastM[m.client_id]||m.date>C.lastM[m.client_id])C.lastM[m.client_id]=m.date});
     C.ficheOk=!r[3].error;C.fiches={};(r[3].data||[]).forEach(function(f){C.fiches[f.client_id]=f});
@@ -820,6 +834,7 @@ function alerts(){var out=[];if(!C.progs)return out;
     if(!p)out.push({c:id,tab:"prog",k:"mute",t:'<b>'+esc(n)+'</b> n\'a pas de programme actif'});
     else{var d=sf.length?daysSince(sf[0].done_at):daysSince(p.debut);if(d>=7)out.push({c:id,tab:"seances",k:"warn",t:'<b>'+esc(n)+'</b> : aucune séance depuis '+d+' jours'})}
     if(sf[0]&&sf[0].ressenti>=9&&daysSince(sf[0].done_at)<=7)out.push({c:id,tab:"seances",k:"warn",t:'<b>'+esc(n)+'</b> a trouvé sa dernière séance très dure ('+sf[0].ressenti+'/10)'});
+    if((C.repasTodo||{})[id])out.push({c:id,tab:"repas",k:"",t:'<b>'+esc(n)+'</b> : '+C.repasTodo[id]+' repas à commenter'});
     if(badCheck((C.lastChk||{})[id]))out.push({c:id,tab:"bilans",k:"warn",t:'<b>'+esc(n)+'</b> a eu une semaine difficile (bilan hebdo)'});
     var lm=(C.lastM||{})[id];if(!lm||daysSince(lm)>14)out.push({c:id,tab:"suivi",k:"mute",t:'<b>'+esc(n)+'</b> : pas de pesée depuis '+(lm?daysSince(lm)+' jours':'le début')});
   });return out}
@@ -845,7 +860,7 @@ function startSession(si){
    (s.echauffement?'<div class="ech" style="margin:0"><div class="ech-k">🔥 Échauffement</div><div>'+esc(s.echauffement)+'</div></div>':'')+
    '<div class="notice">Note ta charge et tes répétitions, puis valide la série ✓ : le chrono de repos se lance tout seul.</div>'+
    (function(){var LB=exoLabels(s.exos);return (s.exos||[]).map(function(x,ei){var lb=LB[ei],chain=lb.grp&&!lb.last,rest=chain?0:parseRest(x.repos),lp=lastPerf(x.nom),nxt=chain?s.exos[ei+1].nom:"";
-     return (lb.grp&&lb.first?'<div class="ssh" style="margin:0">🔗 Superset : 1 série de chaque exercice à la suite, puis repos</div>':'')+'<div class="panel pad'+(lb.grp?' ssx':'')+'"><div style="display:flex;gap:10px;align-items:baseline"><span class="n2"'+(lb.grp?' style="color:var(--ss)"':'')+'>'+lb.lab+'</span><div class="grow"><b>'+esc(x.nom)+'</b><div class="notice">'+esc([x.series&&x.reps?x.series+" × "+x.reps:x.reps,x.charge,x.repos?"repos "+x.repos:""].filter(Boolean).join(" · "))+'</div>'+(x.note?'<div class="notice">'+esc(x.note)+'</div>':'')+(lp?'<div class="s" style="margin-top:3px">Dernière fois : '+esc(setsTxt(lp.sets))+'</div>':'')+chargeHint(x,D)+'</div><a class="demo" href="'+demoUrl(x.nom)+'" target="_blank" rel="noopener">▶ Démo</a></div>'+
+     return (lb.grp&&lb.first?'<div class="ssh" style="margin:0">🔗 Superset : 1 série de chaque exercice à la suite, puis repos</div>':'')+'<div class="panel pad'+(lb.grp?' ssx':'')+'"><div style="display:flex;gap:10px;align-items:baseline"><span class="n2"'+(lb.grp?' style="color:var(--ss)"':'')+'>'+lb.lab+'</span><div class="grow"><b>'+esc(x.nom)+'</b><div class="notice">'+esc([x.series&&x.reps?x.series+" × "+x.reps:x.reps,x.charge,x.repos?"repos "+x.repos:""].filter(Boolean).join(" · "))+'</div>'+(x.note?'<div class="notice">'+esc(x.note)+'</div>':'')+(lp?'<div class="s" style="margin-top:3px">Dernière fois : '+esc(setsTxt(lp.sets))+'</div>':'')+chargeHint(x,D)+'</div>'+demoBtn(x.nom)+'</div>'+
       '<div class="setrows"><div class="sh"><span>Série</span><span>Charge (kg)</span><span>Reps</span><span></span></div>'+SES.log[ei].map(function(st,k){return '<div class="sr'+(st.done?' on':'')+'"><span class="sn">'+(k+1)+'</span><input inputmode="decimal" data-lg="'+ei+'-'+k+'-kg" value="'+esc(st.kg)+'" placeholder="–" aria-label="Charge série '+(k+1)+'"><input inputmode="numeric" data-lg="'+ei+'-'+k+'-reps" value="'+esc(st.reps)+'" placeholder="–" aria-label="Répétitions série '+(k+1)+'"><button class="set'+(st.done?' on':'')+'" data-set="'+ei+'-'+k+'" data-rest="'+rest+'" data-next="'+esc(nxt)+'" aria-label="Valider la série">'+(st.done?'✓':'OK')+'</button></div>'}).join("")+'</div></div>'}).join("")})()+
    '<button class="btn primary block" id="sesEnd">Terminer la séance</button>';
   openSheet(s.nom||"Séance",body,function(b){
@@ -894,8 +909,8 @@ function nutriHtml(fiche,rows,isCoach){var w=(rows||[]).filter(function(r){retur
    '<div class="macro"><i style="width:'+pc(n.prot*4)+'%;background:var(--accent)"></i><i style="width:'+pc(n.glu*4)+'%;background:#C9821F"></i><i style="width:'+pc(n.lip*9)+'%;background:#7A4C9E"></i></div>'+
    '<div class="mgrid"><div><span class="dot" style="background:var(--accent)"></span><b>'+n.prot+' g</b><span class="notice">Protéines</span></div><div><span class="dot" style="background:#C9821F"></span><b>'+n.glu+' g</b><span class="notice">Glucides</span></div><div><span class="dot" style="background:#7A4C9E"></span><b>'+n.lip+' g</b><span class="notice">Lipides</span></div><div><span class="dot" style="background:#3B82C4"></span><b>'+fnum(n.eau)+' L</b><span class="notice">Eau</span></div></div>'+
    '<div class="notice" style="margin-top:10px">Métabolisme de base '+n.bmr.toLocaleString("fr-FR")+' kcal · dépense estimée '+n.tdee.toLocaleString("fr-FR")+' kcal (Mifflin-St Jeor × '+n.f+'). Ce sont des repères, pas une prescription médicale.</div></div>';}
-function vNutri(){var d=D.fiche;
-  return nutriHtml(d,D.mesures,false)+
+function vNutri(){var d=D.fiche;if(D.repasOk)setTimeout(function(){hydratePhotos(D.repas)},0);
+  return nutriHtml(d,D.mesures,false)+(D.repasOk?'<section><h2 class="sec">Mon journal repas</h2>'+repasHtml(D.repas,false)+'</section>':'')+
    '<section><h2 class="sec">Ton assiette type</h2><div class="panel pad plate"><div class="pl"><div style="flex:2;background:#5BAE6A">½ légumes</div><div style="flex:1;background:var(--accent)">¼ protéines</div><div style="flex:1;background:#C9821F">¼ féculents</div></div><div class="notice" style="margin-top:8px">+ 1 portion de bonnes graisses (huile d\'olive, avocat, oléagineux) et 1 fruit ou laitage.</div></div></section>'+
    '<section><h2 class="sec">Repères protéines</h2><div class="panel">'+[["2 œufs","12 g"],["100 g de blanc de poulet","23 g"],["100 g de thon / poisson blanc","25 g"],["150 g de skyr / fromage blanc","15 g"],["100 g de lentilles cuites","9 g"],["30 g d\'amandes","6 g"],["100 g de tofu","12 g"]].map(function(x){return '<div class="row"><div class="grow">'+esc(x[0])+'</div><b>'+x[1]+'</b></div>'}).join("")+'</div></section>'+
    '<section><h2 class="sec">Les 6 règles d\'or</h2><div class="panel pad"><ol class="rules"><li>Des protéines à chaque repas : elles calent et protègent tes muscles.</li><li>La moitié de l\'assiette en légumes, midi et soir.</li><li>1,5 à 2 L d\'eau par jour, plus les jours d\'entraînement.</li><li>Une collation prévue plutôt que du grignotage : fruit + laitage ou poignée d\'oléagineux.</li><li>Pas de boissons sucrées ni de jus : ils ne calent pas.</li><li>Manger lentement, à table, sans écran.</li></ol></div></section>';}
@@ -1144,8 +1159,10 @@ function loadAct(id){Promise.all([
     sb.from("photos").select("*").eq("client_id",id).order("date",{ascending:true}),
     sb.from("fiches").select("*").eq("client_id",id).maybeSingle(),
     sb.from("messages").select("*").eq("client_id",id).order("created_at",{ascending:true}),
-    sb.from("checkins").select("*").eq("client_id",id).order("created_at",{ascending:true})
-  ]).then(function(r){if(C.sel!==id)return;C.act={progs:r[0].data||[],done:r[1].data||[],mesures:r[2].data||[],photos:r[3].data||[],ficheOk:!r[4].error,fiche:r[4].data||null,msgOk:!r[5].error,msgs:r[5].data||[],checkOk:!r[6].error,checks:r[6].data||[]};render()}).catch(err)}
+    sb.from("checkins").select("*").eq("client_id",id).order("created_at",{ascending:true}),
+    sb.from("habitudes").select("*").eq("client_id",id).order("date",{ascending:true}),
+    sb.from("repas").select("*").eq("client_id",id).order("created_at",{ascending:true})
+  ]).then(function(r){if(C.sel!==id)return;C.act={habOk:!r[7].error,habs:r[7].data||[],repasOk:!r[8].error,repas:r[8].data||[],progs:r[0].data||[],done:r[1].data||[],mesures:r[2].data||[],photos:r[3].data||[],ficheOk:!r[4].error,fiche:r[4].data||null,msgOk:!r[5].error,msgs:r[5].data||[],checkOk:!r[6].error,checks:r[6].data||[]};render()}).catch(err)}
 function packsOf(cid){return ciAll("pack").filter(function(p){return p.data.cid===cid}).sort(function(a,b){return (b.data.debut||"").localeCompare(a.data.debut||"")})}
 function packLeft(pk,evts){var used=(evts||ciAll("evt")).filter(function(e){return e.data.cid===pk.data.cid&&e.data.fait&&(e.data.type==="presentiel"||e.data.type==="distanciel")&&(e.data.date||"")>=(pk.data.debut||"")}).length;return Math.max(0,(+pk.data.nb||0)-used)}
 function dueOf(cid){return ciAll("money").filter(function(m){return m.data.cid===cid&&m.data.sens==="in"&&m.data.statut!=="paye"}).reduce(function(s,m){return s+(+m.data.montant||0)},0)}
@@ -1164,20 +1181,20 @@ document.addEventListener("click",function(e){var t=e.target.closest("[data-cto]
 function vContact(){
   var c=ciGet(C.selC);if(!c){C.selC=null;return render()}
   var d=c.data,reg=!!c.client_id,a=C.act;
-  var tabs=[["infos","Infos"]].concat(reg?[["prog","Programme"],["seances","Séances"],["suivi","Suivi"],["photos","Photos"],["perfs","Perfs"]]:[]).concat(reg&&a&&a.checkOk?[["bilans","Bilans hebdo"+(badCheck(lastCheck(a.checks))?" ⚠️":"")]]:[]).concat([["forme","Bilans forme"],["pay","Paiements"]]).concat(reg&&a&&a.msgOk?[["msgs","Messages"+(a.msgs.some(function(m){return !m.from_coach&&!m.lu})?" •":"")]]:[]);
+  var tabs=[["infos","Infos"]].concat(reg?[["prog","Programme"],["seances","Séances"],["suivi","Suivi"],["photos","Photos"],["perfs","Perfs"]]:[]).concat(reg&&a&&a.checkOk?[["bilans","Bilans hebdo"+(badCheck(lastCheck(a.checks))?" ⚠️":"")]]:[]).concat(reg&&a&&a.habOk?[["habs","Habitudes"]]:[]).concat(reg&&a&&a.repasOk?[["repas","Repas"+(a.repas.some(function(x){return !x.comment})?" •":"")]]:[]).concat([["forme","Bilans forme"],["pay","Paiements"]]).concat(reg&&a&&a.msgOk?[["msgs","Messages"+(a.msgs.some(function(m){return !m.from_coach&&!m.lu})?" •":"")]]:[]);
   if(!tabs.some(function(t){return t[0]===C.selTab}))C.selTab="infos";
   var head='<div><button class="back" id="back">‹ Clients</button></div><div style="display:flex;align-items:center;gap:12px"><div class="avatar">'+esc(initials(d.nom))+'</div><div class="grow" style="min-width:0"><div style="font-family:var(--display);font-weight:800;font-size:26px;text-transform:uppercase;line-height:1.05">'+esc(d.nom)+'</div><div class="s">'+esc([{presentiel:"Présentiel",distanciel:"Distanciel",mixte:"Mixte"}[d.mode],d.tarif?eur(d.tarif)+" / séance":""].filter(Boolean).join(" · "))+'</div></div><button class="btn sm ghost" id="ced">Modifier</button></div>'+
    '<div class="seg" role="group">'+tabs.map(function(t){return '<button data-ct="'+t[0]+'" aria-pressed="'+(C.selTab===t[0])+'">'+t[1]+'</button>'}).join("")+'</div>';
-  var needAct=reg&&["prog","seances","suivi","photos","perfs","bilans","msgs"].indexOf(C.selTab)>-1;
+  var needAct=reg&&["prog","seances","suivi","photos","perfs","bilans","msgs","habs","repas"].indexOf(C.selTab)>-1;
   var body=needAct&&!a?'<div class="empty">Chargement…</div>':({
     infos:function(){return cInfos(c)},prog:cProg,seances:cSeances,
     suivi:function(){return imcHtml(a.mesures,a.fiche)+suiviHtml(a.mesures,false)},photos:function(){return photosHtml(a.photos,false)},
     perfs:function(){var ctx={done:a.done,fiche:a.fiche,mesures:a.mesures},ap=a.progs.filter(function(p){return p.actif})[0];return chargesHtml(ctx,ap).replace("Mes charges","Ses charges")+'<h2 class="sec" style="margin:8px 0 0">Historique par exercice</h2>'+perfsHtml(a.done)},
     bilans:function(){return checksHtml(a.checks)},forme:function(){return '<button class="btn primary block" data-act-c="bil">+ Nouveau bilan forme</button><div class="panel" style="padding:10px">'+bilansHtmlN(c.id)+'</div>'},
-    pay:function(){return cPay(c)},msgs:function(){return msgsHtml(a.msgs,true,C.draft)}})[C.selTab]();
+    pay:function(){return cPay(c)},habs:function(){return '<button class="btn block" data-hcfg="1">🎯 Régler ses objectifs</button>'+habitsTable(a.habs,habCfg(ciAll("cfg").filter(function(i){return i.client_id===c.client_id})))},repas:function(){setTimeout(function(){hydratePhotos(a.repas)},0);return repasHtml(a.repas,true)},msgs:function(){return msgsHtml(a.msgs,true,C.draft)}})[C.selTab]();
   $("view").innerHTML=head+body;
   $("back").onclick=function(){C.selC=null;C.sel=null;C.act=null;tab="clients";render()};
-  $("ced").onclick=function(){editContact(c)};
+  $("ced").onclick=function(){editContact(c)};var hc=$("view").querySelector("[data-hcfg]");if(hc)hc.onclick=function(){editHabCfg(c)};
   $("view").querySelectorAll("[data-ct]").forEach(function(b){b.onclick=function(){C.selTab=b.dataset.ct;render()}});
   if(a&&C.selTab==="photos")hydratePhotos(a.photos);
   if(a&&C.selTab==="prog"){bindProg({id:c.client_id,nom:d.nom});bindProgN(c)}
@@ -1351,7 +1368,7 @@ function vProgsN(){if(!C.ciOk)return migrNotice();var l=ciAll("tpl").slice().sor
   return '<button class="btn primary block" data-ntpl="1">+ Nouveau modèle de programme</button>'+
    '<section><h2 class="sec">Mes modèles</h2><div class="panel">'+(l.length?l.map(function(t){return '<div class="row"><button class="grow plain" data-etpl="'+t.id+'"><div class="t">'+esc(t.data.titre||"Modèle")+'</div><div class="s">'+progSummary(t.data)+'</div></button><button class="btn sm primary" data-atpl="'+t.id+'">Assigner</button></div>'}).join(""):'<div class="empty">Crée un modèle (ex. « Full body débutant 6 semaines ») pour l\'assigner en 2 secondes à n\'importe quel client.</div>')+'</div></section>'+
    '<section><h2 class="sec">Programmes en cours</h2><div class="panel">'+(act.length?act.map(function(c){var p=C.progs[c.client_id],cw=curWeek(p),v=assid(c.client_id);return '<button class="row tap" data-cto="'+c.id+'" data-ctab="prog"><div class="grow"><div class="t">'+esc(c.data.nom)+'</div><div class="s">'+esc(p.titre)+' · S'+(cw+1)+' / '+weeksOf(p).length+'</div></div>'+(v!=null?'<span class="chip '+(v>=80?'ok':v>=50?'':'warn')+'">'+v+' %</span>':'')+'</button>'}).join(""):'<div class="empty">Aucun programme actif.</div>')+'</div></section>'+
-   '<div class="notice">Dans un programme, « + Séance type » ajoute en un clic : full body, bas / haut du corps, abdos, HIIT sans saut, marche inclinée, dos & posture, mobilité.</div>'}
+   videosHtml()+'<div class="notice">Dans un programme, « + Séance type » ajoute en un clic : full body, bas / haut du corps, abdos, HIIT sans saut, marche inclinée, dos & posture, mobilité.</div>'}
 document.addEventListener("click",function(e){if(!prof||prof.role!=="coach")return;var t;
   if(e.target.closest("[data-ntpl]"))editProgram({},{title:"Nouveau modèle",onSave:function(p){return ciSave({kind:"tpl",data:{titre:p.titre,objectif:p.objectif,consignes:p.consignes,weeks:p.weeks}})}});
   else if((t=e.target.closest("[data-etpl]"))){var it=ciGet(t.dataset.etpl);editProgram(it.data,{title:"Modifier le modèle",onSave:function(p){it.data={titre:p.titre,objectif:p.objectif,consignes:p.consignes,weeks:p.weeks};return ciSave(it)},onDel:function(){return ciDel(it.id)}})}
@@ -1418,6 +1435,65 @@ function clientRdvHtml(){var it=D.ci||[],today=ymd(),ev=it.filter(function(i){re
   if(ev.length)h+='<div class="panel pad"><div class="k">Mes prochains rendez-vous</div>'+ev.map(function(e){var d=e.data;return '<div class="rdv"><div class="date-blk"><b>'+pd(d.date).getDate()+'</b><span>'+MOIS[pd(d.date).getMonth()]+'</span></div><div class="grow"><b>'+esc(d.titre||(d.type==="distanciel"?"Coaching en visio":"Coaching"))+'</b><div class="s">'+esc([fdate(d.date),d.heure,d.duree?d.duree+" h":""].filter(Boolean).join(" · "))+'</div>'+(d.lien?(/^https?:/.test(d.lien)?'<a class="demo" href="'+esc(d.lien)+'" target="_blank" rel="noopener">Rejoindre la visio</a>':'<div class="s">📍 '+esc(d.lien)+'</div>'):'')+'</div></div>'}).join("")+'</div>';
   if(pk){var left=packLeft(pk,it.filter(function(i){return i.kind==="evt"}));h+='<div class="panel pad"><div class="k">Mon pack</div><div style="display:flex;align-items:baseline;gap:8px"><span class="big">'+left+' / '+pk.data.nb+'</span><span class="notice">séances restantes</span></div><div class="bar"><i style="width:'+Math.round(left/(+pk.data.nb||1)*100)+'%"></i></div></div>'}
   return h}
+
+/* =====================================================
+   AJOUTS v6 : habitudes du jour, journal repas, vidéos de démo
+   ===================================================== */
+var HAB=[["eau","💧","Eau","verres",1,8],["pas","👟","Pas","pas",1000,7000],["sommeil","😴","Sommeil","h",0.5,7],["legumes","🥦","Fruits & légumes","portions",1,5],["mobilite","🧘","Mobilité / étirements","",0,1]];
+function habCfg(list){var c=(list||[]).filter(function(i){return i.kind==="cfg"})[0],d=(c&&c.data)||{},o={};HAB.forEach(function(h){o[h[0]]=d[h[0]]!=null&&d[h[0]]!==""?+d[h[0]]:h[5]});return o}
+function habScore(v,cfg){var n=0;HAB.forEach(function(h){var x=+(v||{})[h[0]]||0;if(h[0]==="mobilite"?x>=1:x>=cfg[h[0]])n++});return n}
+function habStreak(rows,cfg){var by={};(rows||[]).forEach(function(r){by[r.date]=r.data});var n=0,d=new Date();if(habScore(by[ymd(d)],cfg)<4)d.setDate(d.getDate()-1);while(habScore(by[ymd(d)],cfg)>=4){n++;d.setDate(d.getDate()-1)}return n}
+var habT=null;
+function habitsCard(){if(!D.habOk)return '';var cfg=habCfg(D.ci),t=ymd(),row=(D.habs||[]).filter(function(r){return r.date===t})[0],v=(row&&row.data)||{},sc=habScore(v,cfg),st=habStreak(D.habs,cfg);
+  return '<div class="panel pad hab"><div style="display:flex;align-items:baseline;gap:8px"><span class="k">Mes habitudes du jour</span><span class="grow"></span>'+(st?'<span class="chip ok">🔥 '+st+' jour'+(st>1?'s':'')+'</span>':'')+'<b>'+sc+' / 5</b></div>'+
+   HAB.map(function(h){var x=+v[h[0]]||0,ok=h[0]==="mobilite"?x>=1:x>=cfg[h[0]];
+     if(h[0]==="mobilite")return '<div class="hb'+(ok?' ok':'')+'"><span class="hi">'+h[1]+'</span><span class="grow">'+h[2]+'</span><button class="tg'+(ok?' on':'')+'" data-hab="mobilite" data-set="'+(ok?0:1)+'">'+(ok?'✓ Fait':'À faire')+'</button></div>';
+     return '<div class="hb'+(ok?' ok':'')+'"><span class="hi">'+h[1]+'</span><span class="grow">'+h[2]+'<span class="s"> · objectif '+fnum(cfg[h[0]])+(h[3]?' '+h[3]:'')+'</span></span><button class="st" data-hab="'+h[0]+'" data-d="-'+h[4]+'" aria-label="Moins">−</button><b class="hv">'+(h[0]==="pas"?x.toLocaleString("fr-FR"):fnum(x))+'</b><button class="st" data-hab="'+h[0]+'" data-d="'+h[4]+'" aria-label="Plus">+</button></div>'}).join("")+'</div>'}
+document.addEventListener("click",function(e){var t=e.target.closest("[data-hab]");if(!t||!prof||prof.role==="coach")return;var k=t.dataset.hab,day=ymd(),row=(D.habs||[]).filter(function(r){return r.date===day})[0];
+  if(!row){row={client_id:me.id,date:day,data:{}};D.habs.push(row)}var v=row.data;
+  if(t.dataset.set!=null)v[k]=+t.dataset.set;else v[k]=Math.max(0,Math.round(((+v[k]||0)+(+t.dataset.d))*10)/10);
+  var y=window.scrollY;render();window.scrollTo(0,y);
+  clearTimeout(habT);habT=setTimeout(function(){sb.from("habitudes").upsert({client_id:me.id,date:day,data:v,updated_at:new Date().toISOString()}).then(function(x){if(x.error)err(x.error)})},700)});
+function habitsTable(rows,cfg){var by={};(rows||[]).forEach(function(r){by[r.date]=r.data});var days=[];for(var i=0;i<14;i++){var d=new Date();d.setDate(d.getDate()-i);days.push(ymd(d))}
+  var filled=days.filter(function(d){return by[d]}),avg=function(k){var l=filled.map(function(d){return +by[d][k]||0});return l.length?l.reduce(function(a,b){return a+b},0)/l.length:0};
+  return '<div class="stats">'+HAB.slice(0,4).map(function(h){return '<div class="stat"><div class="k">'+h[1]+' '+h[2]+' (moy.)</div><div class="v '+(avg(h[0])>=cfg[h[0]]?'down':'')+'">'+(h[0]==="pas"?Math.round(avg(h[0])).toLocaleString("fr-FR"):fnum(avg(h[0])))+'</div></div>'}).join("")+'</div>'+
+   '<div class="panel"><div style="overflow-x:auto"><table class="tt"><tr><th>Jour</th>'+HAB.map(function(h){return '<th>'+h[1]+'</th>'}).join("")+'<th>Score</th></tr>'+days.map(function(d){var v=by[d];return '<tr><td>'+fdate(d)+'</td>'+HAB.map(function(h){if(!v)return '<td>–</td>';var x=+v[h[0]]||0,ok=h[0]==="mobilite"?x>=1:x>=cfg[h[0]];return '<td class="'+(ok?'gd':'')+'">'+(h[0]==="mobilite"?(x?'✓':'–'):h[0]==="pas"?x.toLocaleString("fr-FR"):fnum(x))+'</td>'}).join("")+'<td><b>'+(v?habScore(v,cfg)+'/5':'–')+'</b></td></tr>'}).join("")+'</table></div></div>'}
+
+/* ---------- journal repas ---------- */
+var MOM=["Petit-déjeuner","Déjeuner","Collation","Dîner","Écart / grignotage"];
+function repasHtml(list,isCoach){var l=(list||[]).slice().sort(function(a,b){return (b.created_at||"").localeCompare(a.created_at||"")}),g={},o=[];l.forEach(function(r){if(!g[r.date]){g[r.date]=[];o.push(r.date)}g[r.date].push(r)});
+  var h=isCoach?'':'<button class="btn primary block" data-repas-add="1">📸 Ajouter un repas</button>';
+  if(!o.length)return h+'<div class="panel"><div class="empty">'+(isCoach?'Aucun repas partagé pour l\'instant.':'Prends tes repas en photo : ta coach les commente pour t\'aider à ajuster ton assiette.')+'</div></div>';
+  return h+o.map(function(d){return '<section><h2 class="sec">'+fdate(d)+'</h2><div class="meals">'+g[d].map(function(r){return '<div class="meal panel">'+(r.path?'<div class="mp"><img data-path="'+esc(r.path)+'" alt="Repas"></div>':'')+'<div class="pad" style="padding:10px 12px;display:flex;flex-direction:column;gap:6px"><span class="chip">'+esc(r.moment||"Repas")+'</span>'+(r.note?'<div style="font-size:14px">'+esc(r.note)+'</div>':'')+
+    (r.comment?'<div class="cmt">💬 <b>'+(isCoach?'Ton commentaire':'Ta coach')+' :</b> '+esc(r.comment)+'</div>':'')+(isCoach?'<button class="btn sm" data-rcom="'+r.id+'">'+(r.comment?'Modifier le commentaire':'Commenter')+'</button>':'')+'</div></div>'}).join("")+'</div></section>'}).join("")}
+function openRepas(){openSheet("Ajouter un repas",'<div class="f"><label for="rp_m">Moment</label><select id="rp_m">'+MOM.map(function(m){return '<option>'+m+'</option>'}).join("")+'</select></div><label class="btn block" for="rp_f" id="rp_l">📷 Choisir ou prendre une photo</label><input id="rp_f" type="file" accept="image/*" hidden><div id="rp_p"></div><div class="f"><label for="rp_n">Un mot (facultatif)</label><input id="rp_n" placeholder="Fait maison, resto, j\'avais très faim…"></div><button class="btn primary" id="rp_ok">Partager avec ma coach</button>',function(b){var file=null;
+  b.querySelector("#rp_f").onchange=function(){file=this.files[0];if(file){b.querySelector("#rp_p").innerHTML='<img class="big-img" src="'+URL.createObjectURL(file)+'" alt="">';b.querySelector("#rp_l").textContent="📷 Changer la photo"}};
+  b.querySelector("#rp_ok").onclick=function(){var btn=this,m=b.querySelector("#rp_m").value,n=b.querySelector("#rp_n").value.trim();if(!file&&!n){toast("Ajoute une photo ou un mot");return}btn.disabled=true;btn.textContent="Envoi…";
+    var up=file?compress(file).then(function(blob){var path=me.id+"/repas/"+Date.now()+".jpg";return sb.storage.from("photos").upload(path,blob,{contentType:"image/jpeg"}).then(function(u){if(u.error)throw u.error;return path})}):Promise.resolve(null);
+    up.then(function(path){return sb.from("repas").insert({client_id:me.id,date:ymd(),moment:m,path:path,note:n}).select().single()}).then(function(x){if(x.error)throw x.error;D.repas.push(x.data);closeSheet();toast("Repas partagé");render();notify(first(prof.nom)+" a partagé un repas",m+(n?" · "+n:""),["plate_with_cutlery"])}).catch(function(x){btn.disabled=false;btn.textContent="Partager avec ma coach";err(x)})}})}
+document.addEventListener("click",function(e){if(e.target.closest("[data-repas-add]"))openRepas();var t=e.target.closest("[data-rcom]");if(!t||!C.act)return;var r=C.act.repas.filter(function(x){return x.id===t.dataset.rcom})[0];
+  openSheet("Commenter le repas",'<div class="f"><label for="rc_t">Ton commentaire</label><textarea id="rc_t" rows="4" placeholder="Super assiette ! Ajoute une portion de protéines…">'+esc(r.comment||"")+'</textarea></div><button class="btn primary" id="rc_ok">Envoyer</button>',function(b){b.querySelector("#rc_ok").onclick=function(){var v=b.querySelector("#rc_t").value.trim();this.disabled=true;sb.from("repas").update({comment:v}).eq("id",r.id).then(function(x){if(x.error)return err(x.error);r.comment=v;if(C.repasTodo&&C.repasTodo[r.client_id])C.repasTodo[r.client_id]--;closeSheet();toast("Commentaire envoyé");render()})}})});
+
+/* ---------- vidéos de démo ---------- */
+function videoFor(nom,list){var n=(nom||"").trim().toLowerCase();return (list||[]).filter(function(i){return i.kind==="video"&&(i.data.nom||"").trim().toLowerCase()===n})[0]}
+function demoBtn(nom){var v=videoFor(nom,prof&&prof.role==="coach"?CI:D.ci);return v?'<button class="demo vid" data-vid="'+esc(v.data.path)+'" data-vn="'+esc(nom)+'">▶ Démo vidéo</button>':'<a class="demo" href="'+demoUrl(nom)+'" target="_blank" rel="noopener">▶ Démo</a>'}
+document.addEventListener("click",function(e){var t=e.target.closest("[data-vid]");if(!t)return;var url=sb.storage.from("demos").getPublicUrl(t.dataset.vid).data.publicUrl;
+  var host=$("vidHost");if(!host){host=document.createElement("div");host.id="vidHost";document.body.appendChild(host)}
+  host.innerHTML='<div class="scrim" style="z-index:70;align-items:center"><div class="vbox"><div style="display:flex;align-items:center;gap:8px;padding:10px 12px"><b class="grow">'+esc(t.dataset.vn||"Démo")+'</b><button class="btn sm ghost" id="vclose">Fermer</button></div><video src="'+esc(url)+'" controls playsinline autoplay muted loop></video></div></div>';
+  host.querySelector("#vclose").onclick=function(){host.innerHTML=""};host.querySelector(".scrim").onclick=function(ev){if(ev.target===this)host.innerHTML=""}});
+function videosHtml(){var l=ciAll("video").slice().sort(function(a,b){return (a.data.nom||"").localeCompare(b.data.nom||"","fr")});
+  return '<section><h2 class="sec">Mes vidéos de démo</h2><div class="notice" style="margin-bottom:8px">Filme-toi 10 à 20 secondes sur un exercice : la vidéo remplace la recherche YouTube chez tous tes adhérents, dès que l\'exercice a exactement le même nom.</div><button class="btn block" data-vadd="1">🎬 Ajouter une vidéo</button><div class="panel" style="margin-top:8px">'+(l.length?l.map(function(v){return '<div class="row"><button class="grow plain" data-vid="'+esc(v.data.path)+'" data-vn="'+esc(v.data.nom)+'"><div class="t">▶ '+esc(v.data.nom)+'</div></button><button class="btn sm ghost" data-vdel="'+v.id+'" aria-label="Supprimer">✕</button></div>'}).join(""):'<div class="empty">Aucune vidéo pour l\'instant.</div>')+'</div></section>'}
+document.addEventListener("click",function(e){if(!prof||prof.role!=="coach")return;var t;
+  if(e.target.closest("[data-vadd]")){buildLibN();openSheet("Ajouter une vidéo de démo",'<div class="f"><label for="vd_n">Exercice (même nom que dans tes programmes)</label><input id="vd_n" list="exoLib" autocomplete="off" placeholder="Squat goblet"></div><label class="btn block" for="vd_f" id="vd_l">🎬 Choisir la vidéo</label><input id="vd_f" type="file" accept="video/*" hidden><div class="notice">50 Mo maximum : une vidéo courte (10 à 20 s) suffit.</div><button class="btn primary" id="vd_ok">Enregistrer</button>',function(b){var file=null;
+    b.querySelector("#vd_f").onchange=function(){file=this.files[0];if(file)b.querySelector("#vd_l").textContent="🎬 "+file.name+" ("+Math.round(file.size/1e6)+" Mo)"};
+    b.querySelector("#vd_ok").onclick=function(){var nom=b.querySelector("#vd_n").value.trim(),btn=this;if(!nom||!file){toast("Indique l'exercice et choisis une vidéo");return}if(file.size>50e6){toast("Vidéo trop lourde (50 Mo max) : coupe-la ou filme plus court");return}
+      btn.disabled=true;btn.textContent="Envoi de la vidéo…";var ext=(file.name.split(".").pop()||"mp4").toLowerCase(),path="v"+Date.now()+"."+ext,old=videoFor(nom,CI);
+      sb.storage.from("demos").upload(path,file,{contentType:file.type||"video/mp4"}).then(function(u){if(u.error)throw u.error;return old?(old.data={nom:nom,path:path},ciSave(old)):ciSave({kind:"video",data:{nom:nom,path:path}})}).then(function(){closeSheet();toast("Vidéo ajoutée");render()}).catch(function(x){btn.disabled=false;btn.textContent="Enregistrer";err(x)})}})}
+  else if((t=e.target.closest("[data-vdel]"))){if(t.dataset.sure!=="1"){t.dataset.sure="1";t.textContent="Sûr ?";return}var v=ciGet(t.dataset.vdel);sb.storage.from("demos").remove([v.data.path]).then(function(){return ciDel(v.id)}).then(function(){toast("Vidéo supprimée");render()})}});
+
+/* ---------- objectifs d'habitudes (coach) ---------- */
+function editHabCfg(c){var cur=ciAll("cfg").filter(function(i){return i.client_id===c.client_id})[0]||{kind:"cfg",client_id:c.client_id,data:{}},v=habCfg(cur.id?[cur]:[]);
+  cform("Objectifs d'habitudes · "+first(c.data.nom),HAB.slice(0,4).map(function(h){return {k:h[0],label:h[1]+" "+h[2]+" ("+h[3]+" / jour)",type:"number",half:true}}),v,function(n){cur.data=n;return ciSave(cur)})}
 
 boot();
 })();
