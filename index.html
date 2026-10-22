@@ -448,7 +448,7 @@ function markDone(si,det){
         if(x.error&&row.details){delete row.details;return sb.from("seances_faites").insert(row).select().single()}return x}).then(function(x){
         if(x.error){btn.disabled=false;return err(x.error)}
         D.done.push(x.data);closeSheet();toast("Séance validée 💪");render();
-        notify(first(prof.nom)+" a fait sa séance","Semaine "+(weekSel+1)+" · "+(s.nom||"Séance")+" · ressenti "+r+"/10"+(det?"\n"+det.exos.map(function(e){return e.nom+" : "+setsTxt(e.sets)}).concat((det.blocs||[]).map(function(b){return FMT[b.fmt]+" "+(b.fmt==="circuit"?"":b.min+" min ")+b.nom+(b.tours?" · "+b.tours+" tours":"")})).join("\n"):"")+(cm?"\n« "+cm+" »":""),["muscle"]);
+        notify(first(prof.nom)+" a fait sa séance","Semaine "+(weekSel+1)+" · "+(s.nom||"Séance")+" · ressenti "+r+"/10"+(det?"\n"+det.exos.map(function(e){return e.nom+" : "+setsTxt(e.sets)}).concat((det.blocs||[]).map(function(b){return FMT[b.fmt]+" "+(b.fmt==="circuit"?"":b.min+" min ")+b.nom+(b.sec?" · "+mmss(b.sec):b.tours?" · "+b.tours+" tours":"")})).join("\n"):"")+(cm?"\n« "+cm+" »":""),["muscle"]);
       });
     };
   });
@@ -659,7 +659,7 @@ function bindProg(c){
 }
 function cSeances(){
   var a=C.act;if(!a.done.length)return '<div class="panel"><div class="empty">Aucune séance validée pour l\'instant.</div></div>';
-  return '<div class="panel">'+a.done.map(function(d){return '<div class="row"><div class="grow" style="min-width:0"><div class="t">'+esc(d.seance_nom||"Séance")+' · '+(d.semaine<0?'Libre':'S'+(d.semaine+1))+'</div><div class="s" style="white-space:normal">'+fdate(d.done_at)+(d.commentaire?' · « '+esc(d.commentaire)+' »':'')+'</div></div>'+(d.ressenti?'<span class="chip '+(d.ressenti>=9?'warn':'ok')+'">'+d.ressenti+'/10</span>':'')+(d.details&&(d.details.exos||d.details.blocs)?'<details class="dt"><summary class="s">Voir le détail</summary>'+(d.details.exos||[]).map(function(e){return '<div class="s">'+esc(e.nom)+' : '+esc(setsTxt(e.sets))+'</div>'}).join("")+(d.details.blocs||[]).map(function(b){return '<div class="s">⏱ '+FMT[b.fmt]+' '+(b.fmt==="circuit"?'':b.min+' min ')+esc(b.nom)+(b.tours?' · '+b.tours+' tours':'')+'</div>'}).join("")+'</details>':'')+(a.msgOk?'<button class="btn sm ghost" data-reply="'+esc(d.seance_nom||"Séance")+'">Répondre</button>':'')+'</div>'}).join("")+'</div>';
+  return '<div class="panel">'+a.done.map(function(d){return '<div class="row"><div class="grow" style="min-width:0"><div class="t">'+esc(d.seance_nom||"Séance")+' · '+(d.semaine<0?'Libre':'S'+(d.semaine+1))+'</div><div class="s" style="white-space:normal">'+fdate(d.done_at)+(d.commentaire?' · « '+esc(d.commentaire)+' »':'')+'</div></div>'+(d.ressenti?'<span class="chip '+(d.ressenti>=9?'warn':'ok')+'">'+d.ressenti+'/10</span>':'')+(d.details&&(d.details.exos||d.details.blocs)?'<details class="dt"><summary class="s">Voir le détail</summary>'+(d.details.exos||[]).map(function(e){return '<div class="s">'+esc(e.nom)+' : '+esc(setsTxt(e.sets))+'</div>'}).join("")+(d.details.blocs||[]).map(function(b){return '<div class="s">⏱ '+FMT[b.fmt]+' '+(b.fmt==="circuit"?'':b.min+' min ')+esc(b.nom)+(b.sec?' · '+mmss(b.sec):b.tours?' · '+b.tours+' tours':'')+'</div>'}).join("")+'</details>':'')+(a.msgOk?'<button class="btn sm ghost" data-reply="'+esc(d.seance_nom||"Séance")+'">Répondre</button>':'')+'</div>'}).join("")+'</div>';
 }
 function rndCode(){var a="ABCDEFGHJKLMNPQRSTUVWXYZ23456789",s="";for(var i=0;i<6;i++)s+=a[Math.floor(Math.random()*a.length)];return s}
 function invMsg(i){return "Salut "+first(i.nom)+" ! Voici ton appli de coaching M Studio : "+location.origin+location.pathname+"\n\n1. Ouvre le lien dans Safari\n2. Appuie sur « Créer mon compte » avec ton code : "+i.code+"\n3. Ajoute l'appli sur ton écran d'accueil : bouton Partager › « Sur l'écran d'accueil »\n\nÀ très vite pour ta première séance 💪\nMaëva"}
@@ -1668,11 +1668,13 @@ document.addEventListener("click",function(e){if(!prof||prof.role!=="coach")retu
 /* =====================================================
    FORMATS CHRONOMÉTRÉS : EMOM, AMRAP, Tabata, Circuit
    ===================================================== */
-var FMT={emom:"EMOM",amrap:"AMRAP",tabata:"Tabata",circuit:"Circuit"};
+var FMT={emom:"EMOM",amrap:"AMRAP",fortime:"For time",tabata:"Tabata",circuit:"Circuit"};
+function mmss(t){t=Math.max(0,Math.round(t||0));return Math.floor(t/60)+":"+String(t%60).padStart(2,"0")}
 function grpMembers(exos,j){var a=[j],k=j;while(exos[k]&&exos[k].lien&&k<exos.length-1){k++;a.push(k)}return a}
 function fmtDesc(x,exos,j){var f=x.fmt,m=+x.fmtMin||0,ev=+x.fmtEvery||1,mem=grpMembers(exos,j).map(function(k){return exos[k]}),names=mem.map(function(e){return (e.reps?e.reps+" ":"")+e.nom}).join(" + ");
   if(f==="emom")return "⏱ EMOM "+m+" min · "+(mem.length>1?"en alternance, une minute chacun":"toutes les "+(ev>1?ev+" min":"minutes"))+" : "+names+". Le temps qui reste dans la minute, c'est ta récup.";
   if(f==="amrap")return "⏱ AMRAP "+m+" min · un maximum de tours de : "+names+". Note ton nombre de tours.";
+  if(f==="fortime"){var tt=+x.fmtTours||1;return "⏱ For time"+(tt>1?" · "+tt+" tours de":"")+" : "+names+". Temps limite "+(m||10)+" min. Va le plus vite possible et note ton temps."}
   if(f==="tabata")return "⏱ Tabata "+(m||4)+" min · 20 s à fond / 10 s de repos, "+((m||4)*2)+" fois"+(mem.length>1?", en alternant les exercices":"")+".";
   if(f==="circuit")return "⏱ Circuit "+(+x.fmtTours||3)+" tours : "+names+" à la suite, puis "+(mem[mem.length-1].repos||"1 min 30")+" de repos entre les tours.";return ""}
 function fmtStart(exos,j){return j===0||!exos[j-1].lien}
@@ -1683,20 +1685,22 @@ function openFmtTimer(s,j){var exos=s.exos,x=exos[j],mem=grpMembers(exos,j).map(
   try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();actx.resume&&actx.resume()}catch(e){}
   try{navigator.wakeLock&&navigator.wakeLock.request("screen").catch(function(){})}catch(e){}
   var host=$("ftHost");if(!host){host=document.createElement("div");host.id="ftHost";document.body.appendChild(host)}
-  host.innerHTML='<div class="ft"><div class="ft-top"><b>'+FMT[f]+(f!=="circuit"?' · '+m+' min':' · '+(+x.fmtTours||3)+' tours')+'</b><button class="btn sm" id="ft_x">Terminer</button></div><div class="ft-ph" id="ft_ph">Prêt ?</div><div class="ft-big" id="ft_big">'+(f==="circuit"?'Tour 1':'3')+'</div><div class="ft-ex" id="ft_ex"></div><div class="ft-sub" id="ft_sub"></div><div class="bar"><i id="ft_bar"></i></div><div class="actions" id="ft_act">'+(f==="amrap"||f==="circuit"?'<button class="btn primary" id="ft_plus" style="font-size:20px;padding:18px">'+(f==="amrap"?'+1 tour':'Tour terminé ✓')+'</button>':'')+'</div></div>';
-  var t0=null,lastI=-1,cnt=3,int=null,restEnd=0;
+  host.innerHTML='<div class="ft"><div class="ft-top"><b>'+FMT[f]+(f!=="circuit"?' · '+m+' min':' · '+(+x.fmtTours||3)+' tours')+'</b><button class="btn sm" id="ft_x">Terminer</button></div><div class="ft-ph" id="ft_ph">Prêt ?</div><div class="ft-big" id="ft_big">'+(f==="circuit"?'Tour 1':'3')+'</div><div class="ft-ex" id="ft_ex"></div><div class="ft-sub" id="ft_sub"></div><div class="bar"><i id="ft_bar"></i></div><div class="actions" id="ft_act">'+(f==="amrap"||f==="circuit"||(f==="fortime"&&(+x.fmtTours||1)>1)?'<button class="btn primary" id="ft_plus" style="font-size:20px;padding:18px">'+(f==="circuit"?'Tour terminé ✓':'+1 tour')+'</button>':'')+(f==="fortime"?'<button class="btn primary" id="ft_done" style="font-size:20px;padding:18px">Fini ! Stop ⏱</button>':'')+'</div></div>';
+  var t0=null,lastI=-1,cnt=3,int=null,restEnd=0,lastEl=0;
   function exLine(e){return (e.reps?e.reps+" ":"")+e.nom+(e.charge?" · "+e.charge:"")}
-  function stop(save){clearInterval(int);int=null;if(save!==false){SES.blocs=SES.blocs||[];SES.blocs.push({fmt:f,min:m,tours:tours,nom:mem.map(function(e){return e.nom}).join(" + ")});toast(FMT[f]+" terminé"+(tours?" · "+tours+" tours":"")+" 💪")}host.innerHTML=""}
+  function stop(save){clearInterval(int);int=null;if(save!==false){SES.blocs=SES.blocs||[];SES.blocs.push({fmt:f,min:m,tours:tours,sec:f==="fortime"?Math.round(lastEl):0,nom:mem.map(function(e){return e.nom}).join(" + ")});toast(FMT[f]+" terminé"+(f==="fortime"?" en "+mmss(lastEl):tours?" · "+tours+" tours":"")+" 💪")}host.innerHTML=""}
   function tick(){var el=(Date.now()-t0)/1000;
     if(f==="circuit"){var tt=+x.fmtTours||3;if(restEnd&&Date.now()<restEnd){var r=Math.ceil((restEnd-Date.now())/1000);$("ft_ph").textContent="Repos";$("ft_big").textContent=Math.floor(r/60)+":"+String(r%60).padStart(2,"0")}else{if(restEnd){restEnd=0;beep()}$("ft_ph").textContent="On y va";$("ft_big").textContent="Tour "+Math.min(tours+1,tt)+" / "+tt}$("ft_ex").innerHTML=mem.map(function(e){return esc(exLine(e))}).join("<br>");$("ft_bar").style.width=(tours/tt*100)+"%";return}
-    var left=Math.max(0,total-el);$("ft_bar").style.width=(el/total*100)+"%";
-    if(left<=0){beep();$("ft_ph").textContent="Terminé !";$("ft_big").textContent=f==="amrap"?tours+" tours":"✓";clearInterval(int);int=null;setTimeout(function(){stop()},2500);return}
+    lastEl=Math.min(el,total);var left=Math.max(0,total-el);$("ft_bar").style.width=(el/total*100)+"%";
+    if(left<=0){beep();$("ft_ph").textContent=f==="fortime"?"Temps limite atteint":"Terminé !";$("ft_big").textContent=f==="amrap"?tours+" tours":"✓";clearInterval(int);int=null;setTimeout(function(){stop()},2500);return}
     if(f==="emom"){var i=Math.floor(el/ev),inI=ev-(el%ev);if(i!==lastI){lastI=i;if(i>0)beep()}var e=mem[i%mem.length];$("ft_ph").textContent=(ev>60?"Bloc ":"Minute ")+(i+1)+" / "+Math.ceil(total/ev);$("ft_big").textContent=Math.floor(inI/60)+":"+String(Math.floor(inI%60)).padStart(2,"0");$("ft_ex").textContent=exLine(e);$("ft_sub").textContent="Fini avant le bip ? Récupère jusqu'à la minute suivante."}
+    else if(f==="fortime"){$("ft_ph").textContent="Chrono · limite "+m+" min";$("ft_big").textContent=mmss(el);$("ft_ex").innerHTML=mem.map(function(e){return esc(exLine(e))}).join("<br>");var tt2=+x.fmtTours||1;$("ft_sub").textContent=tt2>1?"Tour "+Math.min(tours+1,tt2)+" / "+tt2:""}
     else if(f==="tabata"){var k=Math.floor(el/30),ph=el%30,work=ph<20,cur=k*2+(work?0:1);if(cur!==lastI){lastI=cur;beep()}var e2=mem[k%mem.length];$("ft_ph").textContent=(work?"À FOND":"Repos")+" · round "+(k+1)+" / "+Math.round(total/30);$("ft_big").textContent=Math.ceil(work?20-ph:30-ph);$("ft_ex").textContent=work?exLine(e2):"Ensuite : "+exLine(mem[(k+1)%mem.length]);host.querySelector(".ft").classList.toggle("rest",!work)}
     else{$("ft_ph").textContent="Temps restant";$("ft_big").textContent=Math.floor(left/60)+":"+String(Math.floor(left%60)).padStart(2,"0");$("ft_ex").innerHTML=mem.map(function(e){return esc(exLine(e))}).join("<br>");$("ft_sub").textContent=tours+" tour"+(tours>1?"s":"")+" terminé"+(tours>1?"s":"")}}
   function go(){t0=Date.now();beep();int=setInterval(tick,200);tick()}
   var ci=setInterval(function(){cnt--;if(cnt<=0){clearInterval(ci);go()}else{$("ft_big").textContent=cnt}},1000);
   $("ft_x").onclick=function(){clearInterval(ci);stop(t0!=null)};
+  var fd=$("ft_done");if(fd)fd.onclick=function(){if(!t0)return;lastEl=(Date.now()-t0)/1000;beep();stop()};
   var pl=$("ft_plus");if(pl)pl.onclick=function(){tours++;if(f==="circuit"){var tt=+x.fmtTours||3;if(tours>=tt){beep();stop();return}restEnd=Date.now()+parseRest(mem[mem.length-1].repos||"90 s")*1000;beep()}tick()};
 }
 document.addEventListener("click",function(e){var t=e.target.closest("[data-fmt]");if(!t||!SES)return;var s=weeksOf(D.prog)[SES.wk].seances[SES.si];openFmtTimer(s,+t.dataset.fmt)});
@@ -1742,6 +1746,53 @@ function libHtml(){var have={};ciAll("tpl").forEach(function(t){if(t.data.lib)ha
   return '<section><h2 class="sec">📚 Programmes prêts à l\'emploi</h2><div class="notice" style="margin-bottom:8px">Construits pour toi, avec échauffements, progression semaine par semaine, supersets, formats chronométrés et charges en % / RIR. Ajoute-les à tes modèles, adapte si besoin, puis assigne-les.</div><div class="panel">'+PROG_LIB.map(function(p){var w=p.gen(),n=0,e=0;w.forEach(function(x){x.seances.forEach(function(s){n++;e+=s.exos.length})});return '<div class="row" style="align-items:flex-start"><div class="grow" style="min-width:0"><div class="t" style="white-space:normal">'+esc(p.titre)+'</div><div class="s" style="white-space:normal">'+esc(p.niveau)+' · '+w[0].seances.length+' séances / semaine · '+e+' exercices au total</div><div class="s" style="white-space:normal;margin-top:2px">'+esc(p.objectif)+'</div></div>'+(have[p.id]?'<span class="chip ok">Ajouté</span>':'<button class="btn sm primary" data-libadd="'+p.id+'">Ajouter</button>')+'</div>'}).join("")+'</div></section>'}
 document.addEventListener("click",function(e){var t=e.target.closest("[data-libadd]");if(!t||!prof||prof.role!=="coach")return;var p=PROG_LIB.filter(function(x){return x.id===t.dataset.libadd})[0];t.disabled=true;
   ciSave({kind:"tpl",data:{titre:p.titre,objectif:p.objectif,consignes:p.consignes,weeks:p.gen(),lib:p.id}}).then(function(){toast("« "+p.titre+" » ajouté à tes modèles");render()})});
+
+/* ---------- programme CrossFit RX + course ---------- */
+function G(fmt,min,tours,exos){exos[0].fmt=fmt;if(min)exos[0].fmtMin=min;if(tours)exos[0].fmtTours=tours;exos.forEach(function(x,k){if(k<exos.length-1)x.lien=true});return exos}
+var CF_WU="3 tours : 250 m rameur, 10 PVC pass-through, 10 air squats, 5 inchworms, 10 hip openers. Puis 2 séries de montée en charge sur le premier exercice.";
+var RUN_WU="10 min de footing, gammes (montées de genoux, talons-fesses, pas chassés), 3 accélérations progressives de 80 m.";
+PROG_LIB.push({id:"crossfit-rx",titre:"CrossFit RX & Running · 6 semaines",niveau:"Avancé · RX · salle de CrossFit",objectif:"Être plus fort, plus rapide et plus endurant : force lourde, haltérophilie, gymnastique, metcons RX et 2 séances de course par semaine",
+ consignes:"J1 à J5 obligatoires, J6 optionnel selon la fatigue (caserne !). Semaine 1 = on cherche ses charges (3RM / 1RM du jour) : l'appli s'en sert ensuite pour calculer tous les %. Semaines 2 à 5 = on charge. Semaine 6 = décharge. Metcons : RX, scale si la technique casse. Allures course : allure 3 km ≈ 95-100 % VMA, allure 5 km ≈ 92 %, seuil ≈ 85 %, footing ≈ 70 %. Sommeil, protéines (~2 g/kg) et hydratation = 50 % des résultats.",
+ gen:function(){
+  var SQ=[["6","3","Monter au 3RM","2-3 min","Monte par paliers jusqu'à un 3 répétitions lourd et propre : note-le, il sert de base aux %."],["5","5","75%","2 min",""],["5","4","80%","2 min 30",""],["4","3","85%","3 min",""],["3","2","90%","3 min","Dernière série : 1 rep à 93 % si la vitesse est là."],["3","5","65%","2 min","Décharge : rapide et propre."]];
+  var DL=[["5","3","Monter au 3RM","2-3 min","Base pour les %."],["5","5","75%","2 min",""],["5","3","80%","2 min 30",""],["4","3","85%","3 min",""],["3","2","90%","3 min",""],["3","5","65%","2 min",""]];
+  var PR=[["5","3","Monter au 3RM","2 min","Strict, gainé, pas d'impulsion des jambes."],["5","5","75%","2 min",""],["5","4","80%","2 min",""],["4","3","85%","2 min 30",""],["3","2","88%","2 min 30",""],["3","5","65%","90 s",""]];
+  var RUN1=[["10","400 m","allure 3 km","1 min"],["8","500 m","allure 3 km","1 min 15"],["6","800 m","allure 5 km","1 min 30"],["5","1000 m","allure 5 km","2 min"],["12","200 m","très vite (95-100 % VMA)","45 s"],["6","400 m","relâché, allure 5 km","1 min 30"]];
+  var RUN2=[["3","10 min","seuil (85 % VMA)","2 min"],["2","15 min","seuil","3 min"],["1","25 min","tempo continu, juste sous le seuil",""],["4","8 min","allure 10 km","1 min 30"],["1","30 min","dont 20 min au seuil au milieu",""],["1","30 min","footing (70 % VMA)",""]];
+  return wk6(function(i){var dl=i===5;
+   var J1={nom:"J1 · Force bas + metcon court",echauffement:CF_WU,exos:[X("Back squat",SQ[i][0],SQ[i][1],SQ[i][2],SQ[i][3],SQ[i][4])].concat(
+     i===0||i===4?G("fortime",8,1,[X("Thrusters",1,"21-15-9","43 kg","",i===4?"« Fran » retest : bats ton temps de la semaine 1 !":"« Fran » : note ton temps, on le rebat en semaine 5."),X("Pull-ups (kipping ou butterfly)",1,"21-15-9","","")]):
+     i===1?G("amrap",7,0,[X("Power clean",1,"7","70 kg",""),X("Burpees over the bar",1,"7","","")]):
+     i===2?G("fortime",10,5,[X("Deadlift",1,"10","102 kg",""),X("Chest-to-bar pull-ups",1,"12","",""),X("Box jumps",1,"15","60 cm","")]):
+     i===3?G("emom",12,0,[X("Rameur",1,"15 cal","",""),X("Toes-to-bar",1,"12","",""),X("Hang power clean",1,"8","70 kg","")]):
+     G("amrap",10,0,[X("Swing kettlebell",1,"10","24 kg",""),X("Box step-ups",1,"10","",""),X("Course",1,"200 m","","","Rythme facile : RPE 6.")]))};
+   var J2={nom:"J2 · Run VMA + gymnastique",echauffement:RUN_WU,exos:[X("Course fractionnée",RUN1[i][0],RUN1[i][1],RUN1[i][2],RUN1[i][3],"Récup en trottinant. Régularité avant tout : le dernier aussi vite que le premier.")].concat(
+     G("emom",10,0,i<3?[X("Strict handstand push-ups",1,String(5+i),"",""),X("Strict chest-to-bar",1,String(5+i),"","")]:i<5?[X("Ring muscle-ups",1,String(i===3?3:4),"",""),X("Kipping handstand push-ups",1,String(i===3?8:10),"","")]:[X("Strict pull-ups",1,"3","",""),X("Strict handstand push-ups",1,"3","","")])).concat([X("Hollow hold",4,"30 s","","30 s"),X("Double-unders",3,dl?"50":"100","","1 min","Non-stop si possible.")])};
+   var oly=[["Clean & jerk",6,"1","Monter au 1RM du jour","2 min","Paliers de 5-10 kg, technique parfaite."],["Squat clean + jerk",1,"2+1","70%","",{fmt:"emom",fmtMin:10}],["Snatch",6,"2","75%","2 min",""],["Clean & jerk",5,"2","80%","2 min",""],["Snatch",6,"1","Monter au 1RM du jour","2 min",""],["Clean & jerk",6,"1","65%","90 s","Technique, vitesse sous la barre."]][i];
+   var J3={nom:"J3 · Haltérophilie + metcon long",echauffement:CF_WU+" Barre à vide : 3 × (3 muscle cleans, 3 front squats, 3 push press).",exos:[X(oly[0],oly[1],oly[2],oly[3],oly[4],oly[5])].concat(
+     i===0?G("amrap",18,0,[X("Course",1,"200 m","",""),X("Dumbbell snatch alternés",1,"10","22,5 kg",""),X("Box jump over",1,"10","60 cm","")]):
+     i===1?G("fortime",22,1,[X("Double-unders",1,"50","",""),X("Wall balls",1,"40","9 kg",""),X("Swing kettlebell",1,"30","32 kg",""),X("Toes-to-bar",1,"20","",""),X("Power snatch",1,"10","43 kg",""),X("Course",1,"400 m","","","Chipper : tout d'affilée, dans l'ordre.")]):
+     i===2?G("amrap",20,0,[X("Pull-ups",1,"5","","","« Cindy » avec gilet si tu en as un. Objectif : 25 tours et plus."),X("Push-ups",1,"10","",""),X("Air squats",1,"15","","")]):
+     i===3?G("fortime",25,3,[X("Course",1,"800 m","",""),X("Wall balls",1,"30","9 kg",""),X("Chest-to-bar pull-ups",1,"15","","")]):
+     i===4?G("amrap",16,0,[X("Hang squat clean",1,"8","61 kg",""),X("Bar-facing burpees",1,"8","",""),X("Air bike",1,"12 cal","","")]):
+     G("amrap",12,0,[X("Rameur",1,"250 m","",""),X("Sit-ups",1,"15","",""),X("Ring rows",1,"10","","","Décharge : RPE 6, respiration nasale si possible.")]))};
+   var J4={nom:"J4 · Run seuil + accessoires",echauffement:RUN_WU,exos:[X("Course tempo",RUN2[i][0],RUN2[i][1],RUN2[i][2],RUN2[i][3],"Allure « confortablement difficile » : tu peux dire 3-4 mots.")].concat(
+     [X("Soulevé de terre roumain",4,"10",dl?"RIR 4":"RIR 2","",{lien:true}),X("Tractions lestées",4,"5",dl?"Poids du corps":"RIR 2","2 min"),X("Fente bulgare",3,"10 / jambe",dl?"RIR 4":"RIR 2","",{lien:true}),X("GHD sit-ups",3,"15","","90 s"),X("Farmer carry",4,"40 m","2 × 32 kg","1 min")])};
+   var J5={nom:"J5 · Force + metcon benchmark",echauffement:CF_WU,exos:[X("Deadlift",DL[i][0],DL[i][1],DL[i][2],DL[i][3],DL[i][4]),X("Strict press (développé militaire)",PR[i][0],PR[i][1],PR[i][2],PR[i][3],PR[i][4])].concat(
+     i===0?G("emom",15,0,[X("Rameur",1,"15 cal","",""),X("Burpees",1,"12","",""),X("Wall walks",1,"4","","")]):
+     i===1?G("fortime",12,5,[X("Deadlift",1,"10","102 kg",""),X("Burpee box jump over",1,"10","60 cm","")]):
+     i===2?G("fortime",15,5,[X("Deadlift",1,"12","70 kg","","« DT » : la barre ne quitte pas les mains si possible."),X("Hang power clean",1,"9","70 kg",""),X("Push jerk",1,"6","70 kg","")]):
+     i===3?G("amrap",14,0,[X("Rope climbs",1,"3","",""),X("Wall balls",1,"15","9 kg",""),X("Course",1,"400 m","","")]):
+     i===4?G("fortime",8,1,[X("Clean & jerk",1,"30","61 kg","","« Grace » : 30 reps pour le temps. Singles touch-and-go ou rapides.")]):
+     G("circuit",0,3,[X("Swing kettlebell",1,"15","24 kg",""),X("Ring rows",1,"12","",""),X("Course",1,"400 m","","2 min","Décharge, facile.")]))};
+   var J6={nom:"J6 · Engine / sortie longue (optionnel)",echauffement:i%2===0?"10 min très tranquille en début de sortie.":CF_WU,exos:
+     i===0?[X("Course longue",1,"60 min","footing (70 % VMA)","","Terrain vallonné bienvenu.")]:
+     i===1?G("circuit",0,4,[X("Course",1,"1 km","allure semi",""),X("Rameur",1,"1000 m","",""),X("Air bike",1,"20 cal","",""),X("Double-unders",1,"100","","2 min","Engine : régulier, tu dois pouvoir finir fort.")]):
+     i===2?[X("Course longue",1,"70 min","footing, dont 6 × 1 min allure semi en fin de sortie","")]:
+     i===3?G("fortime",60,1,[X("Course",1,"1,6 km","",""),X("Pull-ups",1,"100","","","« Murph » partitionné : 20 tours de 5 pull-ups / 10 push-ups / 15 squats. Gilet 9 kg si tu l'as."),X("Push-ups",1,"200","",""),X("Air squats",1,"300","",""),X("Course",1,"1,6 km","","")]):
+     i===4?[X("Course longue",1,"75 min","footing (70 % VMA)","","Bois toutes les 20-25 min.")]:
+     [X("Course",1,"40 min","footing très facile",""),X("Mobilité",1,"20 min","","","Hanches, chevilles, thoracique, épaules.")]};
+   return [J1,J2,J3,J4,J5,J6]})}});
 
 boot();
 })();
