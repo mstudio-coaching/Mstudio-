@@ -234,6 +234,7 @@ nav.tabs button[aria-current="page"]{color:var(--accent)}
 .cmt{font-size:13px;background:var(--soft);border-radius:8px;padding:6px 8px}
 .demo.vid{border:0;background:var(--accent);color:var(--accent-ink)}
 .vbox{background:var(--surface);border-radius:16px;overflow:hidden;width:min(94vw,520px);max-height:90%}.vbox video{width:100%;max-height:75vh;display:block;background:#000}
+.seg.segw{flex-wrap:wrap;overflow:visible}.seg.segw button{flex:1 1 auto;min-width:auto}
 .err{color:var(--warn);font-size:14px;font-weight:600}
 .avatar{width:40px;height:40px;flex:none;border-radius:12px;display:grid;place-items:center;font-family:var(--display);font-weight:700;font-size:18px;background:var(--soft);color:var(--accent)}
 .back{border:0;background:none;color:var(--accent);font-weight:700;padding:0;font-size:15px}
@@ -1187,7 +1188,7 @@ function vContact(){
   var tabs=[["infos","Infos"]].concat(reg?[["prog","Programme"],["seances","Séances"],["suivi","Suivi"],["photos","Photos"],["perfs","Perfs"]]:[]).concat(reg&&a&&a.checkOk?[["bilans","Bilans hebdo"+(badCheck(lastCheck(a.checks))?" ⚠️":"")]]:[]).concat(reg?[["course","Course"]]:[]).concat(reg&&a&&a.habOk?[["habs","Habitudes"]]:[]).concat(reg&&a&&a.repasOk?[["repas","Repas"+(a.repas.some(function(x){return !x.comment})?" •":"")]]:[]).concat([["forme","Bilans forme"],["pay","Paiements"]]).concat(reg&&a&&a.msgOk?[["msgs","Messages"+(a.msgs.some(function(m){return !m.from_coach&&!m.lu})?" •":"")]]:[]);
   if(!tabs.some(function(t){return t[0]===C.selTab}))C.selTab="infos";
   var head='<div><button class="back" id="back">‹ Clients</button></div><div style="display:flex;align-items:center;gap:12px"><div class="avatar">'+esc(initials(d.nom))+'</div><div class="grow" style="min-width:0"><div style="font-family:var(--display);font-weight:800;font-size:26px;text-transform:uppercase;line-height:1.05">'+esc(d.nom)+'</div><div class="s">'+esc([{presentiel:"Présentiel",distanciel:"Distanciel",mixte:"Mixte"}[d.mode],d.tarif?eur(d.tarif)+" / séance":""].filter(Boolean).join(" · "))+'</div></div><button class="btn sm ghost" id="ced">Modifier</button></div>'+
-   '<div class="seg" role="group">'+tabs.map(function(t){return '<button data-ct="'+t[0]+'" aria-pressed="'+(C.selTab===t[0])+'">'+t[1]+'</button>'}).join("")+'</div>';
+   '<div class="seg segw" role="group">'+tabs.map(function(t){return '<button data-ct="'+t[0]+'" aria-pressed="'+(C.selTab===t[0])+'">'+t[1]+'</button>'}).join("")+'</div>';
   var needAct=reg&&["prog","seances","suivi","photos","perfs","bilans","msgs","habs","repas","course"].indexOf(C.selTab)>-1;
   var body=needAct&&!a?'<div class="empty">Chargement…</div>':({
     infos:function(){return cInfos(c)},prog:cProg,seances:cSeances,
