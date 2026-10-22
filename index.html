@@ -235,6 +235,19 @@ nav.tabs button[aria-current="page"]{color:var(--accent)}
 .demo.vid{border:0;background:var(--accent);color:var(--accent-ink)}
 .vbox{background:var(--surface);border-radius:16px;overflow:hidden;width:min(94vw,520px);max-height:90%}.vbox video{width:100%;max-height:75vh;display:block;background:#000}
 .seg.segw{flex-wrap:wrap;overflow:visible}.seg.segw button{flex:1 1 auto;min-width:auto}
+.fmth{margin:10px 14px 0;padding:8px 10px;border-radius:10px;background:#EDE2F5;color:#5B3482;font-size:13px;font-weight:700}
+.ft-go{margin-top:2px}
+.pe-fmt{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;padding:8px;border-radius:8px;background:#EDE2F5}
+.pe-fmt label{display:flex;flex-direction:column;gap:2px}.pe-fmt span{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#5B3482}
+.pe-fmt select,.pe-fmt input{width:100%;min-width:0;padding:8px;border-radius:8px;border:1px solid var(--line);background:var(--surface);font-size:16px}
+.ft{position:fixed;inset:0;z-index:80;background:#0E6B66;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:calc(20px + env(safe-area-inset-top,0px)) max(20px,env(safe-area-inset-right,0px)) calc(20px + env(safe-area-inset-bottom,0px)) max(20px,env(safe-area-inset-left,0px));text-align:center}
+.ft.rest{background:#4B5FA8}
+.ft-top{position:absolute;top:calc(14px + env(safe-area-inset-top,0px));left:max(16px,env(safe-area-inset-left,0px));right:max(16px,env(safe-area-inset-right,0px));display:flex;justify-content:space-between;align-items:center}
+.ft-ph{font-size:18px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;opacity:.9}
+.ft-big{font-family:var(--display);font-weight:800;font-size:min(34vw,160px);line-height:1;font-variant-numeric:tabular-nums}
+.ft-ex{font-size:22px;font-weight:700;max-width:520px}.ft-sub{font-size:14px;opacity:.85;max-width:420px}
+.ft .bar{width:min(100%,520px);background:rgba(255,255,255,.25)}.ft .bar i{background:#fff}
+.ft .btn{background:rgba(255,255,255,.2);color:#fff}.ft .btn.primary{background:#fff;color:#0E6B66}
 .err{color:var(--warn);font-size:14px;font-weight:600}
 .avatar{width:40px;height:40px;flex:none;border-radius:12px;display:grid;place-items:center;font-family:var(--display);font-weight:700;font-size:18px;background:var(--soft);color:var(--accent)}
 .back{border:0;background:none;color:var(--accent);font-weight:700;padding:0;font-size:15px}
@@ -405,9 +418,9 @@ function doneFor(wk,si){return D.done.filter(function(d){return d.semaine===wk&&
 function exoLabels(exos){var out=[],n=0,l=0;(exos||[]).forEach(function(x,i){var prev=i>0&&exos[i-1].lien&&true,me=!!x.lien&&i<exos.length-1;
   if(!prev){n++;l=0}if(prev||me){l++;out.push({lab:n+String.fromCharCode(64+l),grp:true,first:!prev,last:!me})}else out.push({lab:String(n).padStart(2,"0"),grp:false})});return out}
 function exoHtml(x,i,lb){lb=lb||{lab:String(i+1).padStart(2,"0")};
-  var pills=[];if(x.series||x.reps)pills.push('<span class="pill main">'+esc(x.series&&x.reps?x.series+" × "+x.reps:(x.series?x.series+" séries":x.reps))+'</span>');
-  var pr=presc(x,D);if(x.charge)pills.push('<span class="pill">'+esc(x.charge)+(pr&&pr.kg?' = '+fnum(pr.kg)+' kg':'')+'</span>');if(lb.grp&&!lb.last)pills.push('<span class="pill ss">Enchaîne ↓</span>');else if(x.repos)pills.push('<span class="pill">Repos '+esc(x.repos)+'</span>');
-  return (lb.grp&&lb.first?'<div class="ssh">🔗 Superset · enchaîne les exercices sans repos, repos après le dernier</div>':'')+'<div class="exo'+(lb.grp?' ssx'+(lb.last?' sslast':''):'')+'"><div class="n">'+lb.lab+'</div><div class="nm" style="display:flex;gap:8px;align-items:baseline"><span class="grow">'+esc(x.nom)+'</span>'+demoBtn(x.nom)+'</div>'+(pills.length?'<div class="pills">'+pills.join("")+'</div>':'')+(x.note?'<div class="note">'+esc(x.note)+'</div>':'')+(function(){var sg=suggest(x,D);return sg?'<div class="sug '+sg.t+'">'+(sg.t==="up"?"📈 ":sg.t==="down"?"↘️ ":"➡️ ")+esc(sg.txt)+'</div>':''})()+'</div>';
+  var pills=[];if(lb.fmt){if(x.reps)pills.push('<span class="pill main">'+esc(x.reps)+' reps</span>')}else if(x.series||x.reps)pills.push('<span class="pill main">'+esc(x.series&&x.reps?x.series+" × "+x.reps:(x.series?x.series+" séries":x.reps))+'</span>');
+  var pr=presc(x,D);if(x.charge)pills.push('<span class="pill">'+esc(x.charge)+(pr&&pr.kg?' = '+fnum(pr.kg)+' kg':'')+'</span>');if(lb.fmt){}else if(lb.grp&&!lb.last)pills.push('<span class="pill ss">Enchaîne ↓</span>');else if(x.repos)pills.push('<span class="pill">Repos '+esc(x.repos)+'</span>');
+  return (lb.grp&&lb.first&&!lb.fmt?'<div class="ssh">🔗 Superset · enchaîne les exercices sans repos, repos après le dernier</div>':'')+'<div class="exo'+(lb.grp?' ssx'+(lb.last?' sslast':''):'')+'"><div class="n">'+lb.lab+'</div><div class="nm" style="display:flex;gap:8px;align-items:baseline"><span class="grow">'+esc(x.nom)+'</span>'+demoBtn(x.nom)+'</div>'+(pills.length?'<div class="pills">'+pills.join("")+'</div>':'')+(x.note?'<div class="note">'+esc(x.note)+'</div>':'')+(function(){var sg=suggest(x,D);return sg?'<div class="sug '+sg.t+'">'+(sg.t==="up"?"📈 ":sg.t==="down"?"↘️ ":"➡️ ")+esc(sg.txt)+'</div>':''})()+'</div>';
 }
 function vSeances(){
   var p=D.prog,hr=new Date().getHours();
@@ -421,7 +434,7 @@ function vSeances(){
   html+='<div style="display:flex;align-items:baseline;gap:8px"><span style="font-family:var(--display);font-weight:800;font-size:26px;text-transform:uppercase">Semaine '+(weekSel+1)+'</span>'+(weekSel===cw?'<span class="chip">En cours</span>':'')+'<span class="grow"></span><span class="notice">'+nDone+' / '+ss.length+' faites</span></div>';
   if(p.consignes)html+='<details class="cons"'+(weekSel===0&&!D.done.length?' open':'')+'><summary>Consignes générales</summary><div style="margin-top:8px;white-space:pre-wrap">'+esc(p.consignes)+'</div></details>';
   html+=ss.length?ss.map(function(s,i){var d=doneFor(weekSel,i);
-    return '<article class="seance"><div class="seance-h"><h3>'+esc(s.nom||"Séance "+(i+1))+'</h3>'+(d?'<span class="chip ok">Faite</span>':'')+'</div>'+(s.echauffement?'<div class="ech"><div class="ech-k">🔥 Échauffement</div><div>'+esc(s.echauffement)+'</div></div>':'')+(function(Lb){return (s.exos||[]).map(function(x,j){return exoHtml(x,j,Lb[j])}).join("")})(exoLabels(s.exos))+
+    return '<article class="seance"><div class="seance-h"><h3>'+esc(s.nom||"Séance "+(i+1))+'</h3>'+(d?'<span class="chip ok">Faite</span>':'')+'</div>'+(s.echauffement?'<div class="ech"><div class="ech-k">🔥 Échauffement</div><div>'+esc(s.echauffement)+'</div></div>':'')+(function(Lb){return (s.exos||[]).map(function(x,j){return (x.fmt&&fmtStart(s.exos,j)?'<div class="fmth">'+esc(fmtDesc(x,s.exos,j))+'</div>':'')+exoHtml(x,j,Object.assign({},Lb[j],{fmt:fmtOf(s.exos,j)}))}).join("")})(exoLabels(s.exos))+
      '<div class="seance-f">'+(d?'<div class="done-banner grow">✓ Faite le '+fdate(d.done_at)+(d.ressenti?' · ressenti '+d.ressenti+'/10':'')+'</div><button class="btn sm ghost" data-redo="'+i+'">Refaite</button>':'<button class="btn primary" style="flex:1" data-start="'+i+'">▶ Démarrer</button><button class="btn" style="flex:1" data-done="'+i+'">Déjà faite</button>')+'</div></article>'}).join(""):'<div class="panel"><div class="empty">Pas de séance cette semaine.</div></div>';
   return html;
 }
@@ -435,7 +448,7 @@ function markDone(si,det){
         if(x.error&&row.details){delete row.details;return sb.from("seances_faites").insert(row).select().single()}return x}).then(function(x){
         if(x.error){btn.disabled=false;return err(x.error)}
         D.done.push(x.data);closeSheet();toast("Séance validée 💪");render();
-        notify(first(prof.nom)+" a fait sa séance","Semaine "+(weekSel+1)+" · "+(s.nom||"Séance")+" · ressenti "+r+"/10"+(det?"\n"+det.exos.map(function(e){return e.nom+" : "+setsTxt(e.sets)}).join("\n"):"")+(cm?"\n« "+cm+" »":""),["muscle"]);
+        notify(first(prof.nom)+" a fait sa séance","Semaine "+(weekSel+1)+" · "+(s.nom||"Séance")+" · ressenti "+r+"/10"+(det?"\n"+det.exos.map(function(e){return e.nom+" : "+setsTxt(e.sets)}).concat((det.blocs||[]).map(function(b){return FMT[b.fmt]+" "+(b.fmt==="circuit"?"":b.min+" min ")+b.nom+(b.tours?" · "+b.tours+" tours":"")})).join("\n"):"")+(cm?"\n« "+cm+" »":""),["muscle"]);
       });
     };
   });
@@ -646,7 +659,7 @@ function bindProg(c){
 }
 function cSeances(){
   var a=C.act;if(!a.done.length)return '<div class="panel"><div class="empty">Aucune séance validée pour l\'instant.</div></div>';
-  return '<div class="panel">'+a.done.map(function(d){return '<div class="row"><div class="grow" style="min-width:0"><div class="t">'+esc(d.seance_nom||"Séance")+' · '+(d.semaine<0?'Libre':'S'+(d.semaine+1))+'</div><div class="s" style="white-space:normal">'+fdate(d.done_at)+(d.commentaire?' · « '+esc(d.commentaire)+' »':'')+'</div></div>'+(d.ressenti?'<span class="chip '+(d.ressenti>=9?'warn':'ok')+'">'+d.ressenti+'/10</span>':'')+(d.details&&d.details.exos?'<details class="dt"><summary class="s">Voir les charges</summary>'+d.details.exos.map(function(e){return '<div class="s">'+esc(e.nom)+' : '+esc(setsTxt(e.sets))+'</div>'}).join("")+'</details>':'')+(a.msgOk?'<button class="btn sm ghost" data-reply="'+esc(d.seance_nom||"Séance")+'">Répondre</button>':'')+'</div>'}).join("")+'</div>';
+  return '<div class="panel">'+a.done.map(function(d){return '<div class="row"><div class="grow" style="min-width:0"><div class="t">'+esc(d.seance_nom||"Séance")+' · '+(d.semaine<0?'Libre':'S'+(d.semaine+1))+'</div><div class="s" style="white-space:normal">'+fdate(d.done_at)+(d.commentaire?' · « '+esc(d.commentaire)+' »':'')+'</div></div>'+(d.ressenti?'<span class="chip '+(d.ressenti>=9?'warn':'ok')+'">'+d.ressenti+'/10</span>':'')+(d.details&&(d.details.exos||d.details.blocs)?'<details class="dt"><summary class="s">Voir le détail</summary>'+(d.details.exos||[]).map(function(e){return '<div class="s">'+esc(e.nom)+' : '+esc(setsTxt(e.sets))+'</div>'}).join("")+(d.details.blocs||[]).map(function(b){return '<div class="s">⏱ '+FMT[b.fmt]+' '+(b.fmt==="circuit"?'':b.min+' min ')+esc(b.nom)+(b.tours?' · '+b.tours+' tours':'')+'</div>'}).join("")+'</details>':'')+(a.msgOk?'<button class="btn sm ghost" data-reply="'+esc(d.seance_nom||"Séance")+'">Répondre</button>':'')+'</div>'}).join("")+'</div>';
 }
 function rndCode(){var a="ABCDEFGHJKLMNPQRSTUVWXYZ23456789",s="";for(var i=0;i<6;i++)s+=a[Math.floor(Math.random()*a.length)];return s}
 function invMsg(i){return "Salut "+first(i.nom)+" ! Voici ton appli de coaching M Studio : "+location.origin+location.pathname+"\n\n1. Ouvre le lien dans Safari\n2. Appuie sur « Créer mon compte » avec ton code : "+i.code+"\n3. Ajoute l'appli sur ton écran d'accueil : bouton Partager › « Sur l'écran d'accueil »\n\nÀ très vite pour ta première séance 💪\nMaëva"}
@@ -864,15 +877,15 @@ function startSession(si){
    (s.echauffement?'<div class="ech" style="margin:0"><div class="ech-k">🔥 Échauffement</div><div>'+esc(s.echauffement)+'</div></div>':'')+
    '<div class="notice">Note ta charge et tes répétitions, puis valide la série ✓ : le chrono de repos se lance tout seul.</div>'+
    (function(){var LB=exoLabels(s.exos);return (s.exos||[]).map(function(x,ei){var lb=LB[ei],chain=lb.grp&&!lb.last,rest=chain?0:parseRest(x.repos),lp=lastPerf(x.nom),nxt=chain?s.exos[ei+1].nom:"";
-     return (lb.grp&&lb.first?'<div class="ssh" style="margin:0">🔗 Superset : 1 série de chaque exercice à la suite, puis repos</div>':'')+'<div class="panel pad'+(lb.grp?' ssx':'')+'"><div style="display:flex;gap:10px;align-items:baseline"><span class="n2"'+(lb.grp?' style="color:var(--ss)"':'')+'>'+lb.lab+'</span><div class="grow"><b>'+esc(x.nom)+'</b><div class="notice">'+esc([x.series&&x.reps?x.series+" × "+x.reps:x.reps,x.charge,x.repos?"repos "+x.repos:""].filter(Boolean).join(" · "))+'</div>'+(x.note?'<div class="notice">'+esc(x.note)+'</div>':'')+(lp?'<div class="s" style="margin-top:3px">Dernière fois : '+esc(setsTxt(lp.sets))+'</div>':'')+chargeHint(x,D)+'</div>'+demoBtn(x.nom)+'</div>'+
-      '<div class="setrows"><div class="sh"><span>Série</span><span>Charge (kg)</span><span>Reps</span><span></span></div>'+SES.log[ei].map(function(st,k){return '<div class="sr'+(st.done?' on':'')+'"><span class="sn">'+(k+1)+'</span><input inputmode="decimal" data-lg="'+ei+'-'+k+'-kg" value="'+esc(st.kg)+'" placeholder="–" aria-label="Charge série '+(k+1)+'"><input inputmode="numeric" data-lg="'+ei+'-'+k+'-reps" value="'+esc(st.reps)+'" placeholder="–" aria-label="Répétitions série '+(k+1)+'"><button class="set'+(st.done?' on':'')+'" data-set="'+ei+'-'+k+'" data-rest="'+rest+'" data-next="'+esc(nxt)+'" aria-label="Valider la série">'+(st.done?'✓':'OK')+'</button></div>'}).join("")+'</div></div>'}).join("")})()+
+     return (x.fmt&&fmtStart(s.exos,ei)?'<div class="fmth" style="margin:0">'+esc(fmtDesc(x,s.exos,ei))+'</div><button class="btn primary block ft-go" data-fmt="'+ei+'">⏱ Lancer le minuteur '+FMT[x.fmt]+'</button>':'')+(lb.grp&&lb.first&&!fmtOf(s.exos,ei)?'<div class="ssh" style="margin:0">🔗 Superset : 1 série de chaque exercice à la suite, puis repos</div>':'')+'<div class="panel pad'+(lb.grp?' ssx':'')+'"><div style="display:flex;gap:10px;align-items:baseline"><span class="n2"'+(lb.grp?' style="color:var(--ss)"':'')+'>'+lb.lab+'</span><div class="grow"><b>'+esc(x.nom)+'</b><div class="notice">'+esc([x.series&&x.reps?x.series+" × "+x.reps:x.reps,x.charge,x.repos?"repos "+x.repos:""].filter(Boolean).join(" · "))+'</div>'+(x.note?'<div class="notice">'+esc(x.note)+'</div>':'')+(lp?'<div class="s" style="margin-top:3px">Dernière fois : '+esc(setsTxt(lp.sets))+'</div>':'')+chargeHint(x,D)+'</div>'+demoBtn(x.nom)+'</div>'+
+      (fmtOf(s.exos,ei)?'':'<div class="setrows"><div class="sh"><span>Série</span><span>Charge (kg)</span><span>Reps</span><span></span></div>'+SES.log[ei].map(function(st,k){return '<div class="sr'+(st.done?' on':'')+'"><span class="sn">'+(k+1)+'</span><input inputmode="decimal" data-lg="'+ei+'-'+k+'-kg" value="'+esc(st.kg)+'" placeholder="–" aria-label="Charge série '+(k+1)+'"><input inputmode="numeric" data-lg="'+ei+'-'+k+'-reps" value="'+esc(st.reps)+'" placeholder="–" aria-label="Répétitions série '+(k+1)+'"><button class="set'+(st.done?' on':'')+'" data-set="'+ei+'-'+k+'" data-rest="'+rest+'" data-next="'+esc(nxt)+'" aria-label="Valider la série">'+(st.done?'✓':'OK')+'</button></div>'}).join("")+'</div>')+'</div>'}).join("")})()+
    '<button class="btn primary block" id="sesEnd">Terminer la séance</button>';
   openSheet(s.nom||"Séance",body,function(b){
     b.addEventListener("input",function(e){var t=e.target.closest("[data-lg]");if(!t)return;var a=t.dataset.lg.split("-");SES.log[a[0]][a[1]][a[2]]=t.value.replace(",",".")});
     b.addEventListener("click",function(e){var t=e.target.closest("[data-set]");if(!t)return;var a=t.dataset.set.split("-"),st=SES.log[a[0]][a[1]];st.done=!st.done;t.classList.toggle("on",st.done);t.textContent=st.done?"✓":"OK";t.parentNode.classList.toggle("on",st.done);if(st.done){if(t.dataset.next){stopTimer();toast("➡️ Enchaîne : "+t.dataset.next)}else startTimer(+t.dataset.rest)}});
     b.querySelector("#sesEnd").onclick=function(){
-      var det={exos:(s.exos||[]).map(function(x,ei){return {nom:x.nom,sets:SES.log[ei].filter(function(st){return st.done||st.kg||st.reps}).map(function(st){return {kg:num(st.kg)||null,reps:parseInt(st.reps,10)||null,ok:!!st.done}})}}).filter(function(e){return e.sets.length})};
-      closeSheet();weekSel=SES.wk;var si2=SES.si;SES=null;markDone(si2,det.exos.length?det:null)};
+      var det={exos:(s.exos||[]).map(function(x,ei){return {nom:x.nom,sets:fmtOf(s.exos,ei)?[]:SES.log[ei].filter(function(st){return st.done}).map(function(st){return {kg:num(st.kg)||null,reps:parseInt(st.reps,10)||null,ok:!!st.done}})}}).filter(function(e){return e.sets.length})};
+      if(SES.blocs&&SES.blocs.length)det.blocs=SES.blocs;closeSheet();weekSel=SES.wk;var si2=SES.si;SES=null;markDone(si2,det.exos.length||det.blocs?det:null)};
   });
 }
 
@@ -1322,7 +1335,7 @@ function editProgram(src,opt){
   function W(){return p.weeks[cw]}
   function exoH(si,ei,x,last){return '<div class="pe-exo'+(x.lien&&!last?' ssx':'')+'"><div class="pe-r"><input list="exoLib" autocomplete="off" data-s="'+si+'" data-e="'+ei+'" data-k="nom" value="'+esc(x.nom)+'" placeholder="Exercice (ex. Squat goblet)"><button class="btn sm ghost" data-rme="'+si+'-'+ei+'" aria-label="Retirer">✕</button></div>'+
     '<div class="pe-n">'+[["series","Séries","3"],["reps","Reps","10-12"],["charge","Charge","16 kg / 70% / RIR 2"],["repos","Repos","90 s"]].map(function(f){return '<label><span>'+f[1]+'</span><input data-s="'+si+'" data-e="'+ei+'" data-k="'+f[0]+'" value="'+esc(x[f[0]])+'" placeholder="'+f[2]+'"></label>'}).join("")+'</div>'+
-    '<input data-s="'+si+'" data-e="'+ei+'" data-k="note" value="'+esc(x.note)+'" placeholder="Consigne technique, tempo, variante…">'+(last?'':'<button class="lnk'+(x.lien?' on':'')+'" data-lnk="'+si+'-'+ei+'">🔗 '+(x.lien?'Superset avec le suivant ✓':'Faire un superset avec le suivant')+'</button>')+'</div>'}
+    '<input data-s="'+si+'" data-e="'+ei+'" data-k="note" value="'+esc(x.note)+'" placeholder="Consigne technique, tempo, variante…">'+(function(){var ex=W().seances[si].exos;if(ei>0&&ex[ei-1].lien)return '';var f=x.fmt||"";return '<div class="pe-fmt"><label><span>Format'+(x.lien?' du groupe':'')+'</span><select data-s="'+si+'" data-e="'+ei+'" data-k="fmt"><option value="">Classique (séries)</option>'+Object.keys(FMT).map(function(k){return '<option value="'+k+'"'+(k===f?' selected':'')+'>'+FMT[k]+'</option>'}).join("")+'</select></label><label><span>Durée (min)</span><input data-s="'+si+'" data-e="'+ei+'" data-k="fmtMin" value="'+esc(x.fmtMin||"")+'" placeholder="12"></label><label><span>EMOM : toutes les (min)</span><input data-s="'+si+'" data-e="'+ei+'" data-k="fmtEvery" value="'+esc(x.fmtEvery||"")+'" placeholder="1"></label><label><span>Circuit : tours</span><input data-s="'+si+'" data-e="'+ei+'" data-k="fmtTours" value="'+esc(x.fmtTours||"")+'" placeholder="3"></label></div>'})()+(last?'':'<button class="lnk'+(x.lien?' on':'')+'" data-lnk="'+si+'-'+ei+'">🔗 '+(x.lien?'Superset avec le suivant ✓':'Faire un superset avec le suivant')+'</button>')+'</div>'}
   function weekH(){return '<div class="wk-tabs">'+p.weeks.map(function(w,i){return '<button class="wk" data-wkp="'+i+'" aria-pressed="'+(i===cw)+'">S'+(i+1)+'</button>'}).join("")+'<button class="wk add" data-wka="1">+ Semaine</button></div>'+
     '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><b class="grow" style="font-family:var(--display);font-size:24px;text-transform:uppercase">Semaine '+(cw+1)+'</b><button class="btn sm" data-wkd="1">Dupliquer en S'+(p.weeks.length+1)+'</button>'+(p.weeks.length>1?'<button class="btn sm ghost" data-wkr="1" aria-label="Supprimer la semaine">✕</button>':'')+'</div>'+
     W().seances.map(function(s,si){return '<div class="pe-s"><div class="pe-r"><input class="pe-t" data-sn="'+si+'" value="'+esc(s.nom)+'"><button class="btn sm ghost" data-sd="'+si+'">Dupliquer</button><button class="btn sm ghost" data-sr="'+si+'" aria-label="Retirer la séance">✕</button></div>'+
@@ -1651,6 +1664,42 @@ function editRun(c){var pl=runPlanOf(CI,c.client_id);if(!pl)return;var p=JSON.pa
     box.addEventListener("click",function(e){var t=e.target.closest("button");if(!t)return;sync();var d=t.dataset;if(d.rw!=null)cw=+d.rw;else if(d.rwa){p.weeks.push(JSON.parse(JSON.stringify(p.weeks[p.weeks.length-1])));cw=p.weeks.length-1}else if(d.rsr!=null)p.weeks[cw].seances.splice(+d.rsr,1);else if(d.rsa)p.weeks[cw].seances.push(R("Footing","ef",30,"30 min en endurance."));else return;box.innerHTML=wh()});
     b.querySelector("#re_ok").onclick=function(){sync();p.titre=b.querySelector("#re_t").value.trim()||p.titre;p.debut=b.querySelector("#re_d").value||p.debut;p.vma=num(b.querySelector("#re_v").value)||"";pl.data=p;this.disabled=true;ciSave(pl).then(function(){closeSheet();toast("Plan mis à jour");render()})}})}
 document.addEventListener("click",function(e){if(!prof||prof.role!=="coach")return;var c=ciGet(C.selC);if(!c)return;if(e.target.closest("[data-rassign]"))assignRun(c);else if(e.target.closest("[data-redit]"))editRun(c)});
+
+/* =====================================================
+   FORMATS CHRONOMÉTRÉS : EMOM, AMRAP, Tabata, Circuit
+   ===================================================== */
+var FMT={emom:"EMOM",amrap:"AMRAP",tabata:"Tabata",circuit:"Circuit"};
+function grpMembers(exos,j){var a=[j],k=j;while(exos[k]&&exos[k].lien&&k<exos.length-1){k++;a.push(k)}return a}
+function fmtDesc(x,exos,j){var f=x.fmt,m=+x.fmtMin||0,ev=+x.fmtEvery||1,mem=grpMembers(exos,j).map(function(k){return exos[k]}),names=mem.map(function(e){return (e.reps?e.reps+" ":"")+e.nom}).join(" + ");
+  if(f==="emom")return "⏱ EMOM "+m+" min · "+(mem.length>1?"en alternance, une minute chacun":"toutes les "+(ev>1?ev+" min":"minutes"))+" : "+names+". Le temps qui reste dans la minute, c'est ta récup.";
+  if(f==="amrap")return "⏱ AMRAP "+m+" min · un maximum de tours de : "+names+". Note ton nombre de tours.";
+  if(f==="tabata")return "⏱ Tabata "+(m||4)+" min · 20 s à fond / 10 s de repos, "+((m||4)*2)+" fois"+(mem.length>1?", en alternant les exercices":"")+".";
+  if(f==="circuit")return "⏱ Circuit "+(+x.fmtTours||3)+" tours : "+names+" à la suite, puis "+(mem[mem.length-1].repos||"1 min 30")+" de repos entre les tours.";return ""}
+function fmtStart(exos,j){return j===0||!exos[j-1].lien}
+function fmtOf(exos,j){exos=exos||[];var k=j;while(k>0&&exos[k-1].lien)k--;return (exos[k]&&exos[k].fmt)||""}
+/* minuteur plein écran */
+var FT=null;
+function openFmtTimer(s,j){var exos=s.exos,x=exos[j],mem=grpMembers(exos,j).map(function(k){return exos[k]}),f=x.fmt,m=+x.fmtMin||(f==="tabata"?4:10),ev=(+x.fmtEvery||1)*60,tours=0,total=f==="circuit"?0:m*60;
+  try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();actx.resume&&actx.resume()}catch(e){}
+  try{navigator.wakeLock&&navigator.wakeLock.request("screen").catch(function(){})}catch(e){}
+  var host=$("ftHost");if(!host){host=document.createElement("div");host.id="ftHost";document.body.appendChild(host)}
+  host.innerHTML='<div class="ft"><div class="ft-top"><b>'+FMT[f]+(f!=="circuit"?' · '+m+' min':' · '+(+x.fmtTours||3)+' tours')+'</b><button class="btn sm" id="ft_x">Terminer</button></div><div class="ft-ph" id="ft_ph">Prêt ?</div><div class="ft-big" id="ft_big">'+(f==="circuit"?'Tour 1':'3')+'</div><div class="ft-ex" id="ft_ex"></div><div class="ft-sub" id="ft_sub"></div><div class="bar"><i id="ft_bar"></i></div><div class="actions" id="ft_act">'+(f==="amrap"||f==="circuit"?'<button class="btn primary" id="ft_plus" style="font-size:20px;padding:18px">'+(f==="amrap"?'+1 tour':'Tour terminé ✓')+'</button>':'')+'</div></div>';
+  var t0=null,lastI=-1,cnt=3,int=null,restEnd=0;
+  function exLine(e){return (e.reps?e.reps+" ":"")+e.nom+(e.charge?" · "+e.charge:"")}
+  function stop(save){clearInterval(int);int=null;if(save!==false){SES.blocs=SES.blocs||[];SES.blocs.push({fmt:f,min:m,tours:tours,nom:mem.map(function(e){return e.nom}).join(" + ")});toast(FMT[f]+" terminé"+(tours?" · "+tours+" tours":"")+" 💪")}host.innerHTML=""}
+  function tick(){var el=(Date.now()-t0)/1000;
+    if(f==="circuit"){var tt=+x.fmtTours||3;if(restEnd&&Date.now()<restEnd){var r=Math.ceil((restEnd-Date.now())/1000);$("ft_ph").textContent="Repos";$("ft_big").textContent=Math.floor(r/60)+":"+String(r%60).padStart(2,"0")}else{if(restEnd){restEnd=0;beep()}$("ft_ph").textContent="On y va";$("ft_big").textContent="Tour "+Math.min(tours+1,tt)+" / "+tt}$("ft_ex").innerHTML=mem.map(function(e){return esc(exLine(e))}).join("<br>");$("ft_bar").style.width=(tours/tt*100)+"%";return}
+    var left=Math.max(0,total-el);$("ft_bar").style.width=(el/total*100)+"%";
+    if(left<=0){beep();$("ft_ph").textContent="Terminé !";$("ft_big").textContent=f==="amrap"?tours+" tours":"✓";clearInterval(int);int=null;setTimeout(function(){stop()},2500);return}
+    if(f==="emom"){var i=Math.floor(el/ev),inI=ev-(el%ev);if(i!==lastI){lastI=i;if(i>0)beep()}var e=mem[i%mem.length];$("ft_ph").textContent=(ev>60?"Bloc ":"Minute ")+(i+1)+" / "+Math.ceil(total/ev);$("ft_big").textContent=Math.floor(inI/60)+":"+String(Math.floor(inI%60)).padStart(2,"0");$("ft_ex").textContent=exLine(e);$("ft_sub").textContent="Fini avant le bip ? Récupère jusqu'à la minute suivante."}
+    else if(f==="tabata"){var k=Math.floor(el/30),ph=el%30,work=ph<20,cur=k*2+(work?0:1);if(cur!==lastI){lastI=cur;beep()}var e2=mem[k%mem.length];$("ft_ph").textContent=(work?"À FOND":"Repos")+" · round "+(k+1)+" / "+Math.round(total/30);$("ft_big").textContent=Math.ceil(work?20-ph:30-ph);$("ft_ex").textContent=work?exLine(e2):"Ensuite : "+exLine(mem[(k+1)%mem.length]);host.querySelector(".ft").classList.toggle("rest",!work)}
+    else{$("ft_ph").textContent="Temps restant";$("ft_big").textContent=Math.floor(left/60)+":"+String(Math.floor(left%60)).padStart(2,"0");$("ft_ex").innerHTML=mem.map(function(e){return esc(exLine(e))}).join("<br>");$("ft_sub").textContent=tours+" tour"+(tours>1?"s":"")+" terminé"+(tours>1?"s":"")}}
+  function go(){t0=Date.now();beep();int=setInterval(tick,200);tick()}
+  var ci=setInterval(function(){cnt--;if(cnt<=0){clearInterval(ci);go()}else{$("ft_big").textContent=cnt}},1000);
+  $("ft_x").onclick=function(){clearInterval(ci);stop(t0!=null)};
+  var pl=$("ft_plus");if(pl)pl.onclick=function(){tours++;if(f==="circuit"){var tt=+x.fmtTours||3;if(tours>=tt){beep();stop();return}restEnd=Date.now()+parseRest(mem[mem.length-1].repos||"90 s")*1000;beep()}tick()};
+}
+document.addEventListener("click",function(e){var t=e.target.closest("[data-fmt]");if(!t||!SES)return;var s=weeksOf(D.prog)[SES.wk].seances[SES.si];openFmtTimer(s,+t.dataset.fmt)});
 
 boot();
 })();
