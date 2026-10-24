@@ -389,7 +389,7 @@ function newPassword(){
 }
 
 function render(){ if(!prof)return; try{if(prof.role==="coach")renderCoach(); else renderClient();}catch(e){showErr(e)} }
-function showErr(e){try{console.error(e);var d=document.getElementById("errbar");if(!d){d=document.createElement("div");d.id="errbar";d.style.cssText="position:fixed;left:8px;right:8px;bottom:calc(env(safe-area-inset-bottom) + 76px);z-index:9998;background:#B4434A;color:#fff;padding:10px 12px;border-radius:12px;font:600 12px system-ui;white-space:pre-wrap";d.onclick=function(){d.remove()};document.body.appendChild(d)}var st=String(e&&e.stack||"").split("\n").slice(0,3).join(" | ");d.textContent="⚠️ Bug : "+(e&&e.message||e)+(st?"\n"+st:"")+"\n(Fais une capture pour Claude, touche pour fermer)"}catch(x){}}
+var ERRSEEN={};function showErr(e){try{console.error(e);var k=String(e&&e.message||e);if(ERRSEEN[k])return;ERRSEEN[k]=1;var d=document.getElementById("errbar");if(!d){d=document.createElement("div");d.id="errbar";d.style.cssText="position:fixed;left:8px;right:8px;bottom:calc(env(safe-area-inset-bottom) + 76px);z-index:9998;background:#B4434A;color:#fff;padding:10px 12px;border-radius:12px;font:600 12px system-ui;white-space:pre-wrap";d.onclick=function(){d.remove()};document.body.appendChild(d)}var st=String(e&&e.stack||"").split("\n").slice(0,3).join(" | ");d.textContent="⚠️ Bug : "+(e&&e.message||e)+(st?"\n"+st:"")+"\n(Fais une capture pour Claude, touche pour fermer)"}catch(x){}}
 window.addEventListener("error",function(ev){showErr(ev.error||ev.message)});window.addEventListener("unhandledrejection",function(ev){var r=ev.reason;if(r&&r.message)showErr(r)});
 
 /* =====================================================
@@ -2143,8 +2143,13 @@ function openDispo(){var L=dispoOf(me.id).slice().sort(function(a,b){return a.du
     b.addEventListener("click",function(e){var t=e.target.closest("[data-dpdel]");if(t)save(L.filter(function(x){return x.id!==t.dataset.dpdel}),"Période retirée")})})}
 document.addEventListener("click",function(e){var t=e.target.closest("[data-goc2]");if(t&&prof&&prof.role!=="coach")openDispo()});
 
+/* garde-fous : une nouveauté ne doit jamais bloquer l'appli */
+function guardFn(f,fb){return function(){try{return f.apply(this,arguments)}catch(e){console.error(e);return typeof fb==="function"?fb.apply(this,arguments):fb}}}
+lvlCard=guardFn(lvlCard,"");dispoBanner=guardFn(dispoBanner,"");defisCardClient=guardFn(defisCardClient,"");surpriseCard=guardFn(surpriseCard,"");botCard=guardFn(botCard,"");wrapCard=guardFn(wrapCard,"");evoBtns=guardFn(evoBtns,"");voxBtnHtml=guardFn(voxBtnHtml,"");
+adaptS=guardFn(adaptS,function(s){return s});pauseDays=guardFn(pauseDays,0);dispoOf=guardFn(dispoOf,function(){return []});checkLevelUp=guardFn(checkLevelUp,null);
+
 /* ---------- mises à jour automatiques + Quoi de neuf ---------- */
-var APP_V="2026-10-24.3";
+var APP_V="2026-10-24.4";
 var NEWS=[{v:"2026-10-24.3",t:"Assistant, défis et calendrier",i:["💬 Assistant M Studio : réponses immédiates (remplacer un exo, nutrition, charges, prochaine séance…), et transmission à ta coach si besoin","🏆 Défis collectifs entre adhérents avec barre commune et podium","📅 Mon calendrier : semaine chargée = version express, vacances = poids du corps, pause = programme décalé"]},
  {v:"2026-10-24.2",t:"5 nouveautés waouh",i:["🔊 Coach vocal pendant les séances et les minuteurs (activable / désactivable)","👑 Niveaux, XP et 24 badges à débloquer","🎁 Ton récap du mois façon story, à partager sur Insta","▶️ Ton évolution photo en animation, et en vidéo à partager","🎲 Séance surprise : choisis ton temps, ton matériel et ton énergie, l'appli crée ta séance"]},
  {v:"2026-10-24",t:"Mises à jour automatiques",i:["L'appli détecte toute seule les nouvelles versions et te propose de mettre à jour en un tap","Cette fenêtre « Quoi de neuf » à chaque nouveauté"]},
