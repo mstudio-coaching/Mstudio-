@@ -388,7 +388,9 @@ function newPassword(){
   });
 }
 
-function render(){ if(!prof)return; if(prof.role==="coach")renderCoach(); else renderClient(); }
+function render(){ if(!prof)return; try{if(prof.role==="coach")renderCoach(); else renderClient();}catch(e){showErr(e)} }
+function showErr(e){try{console.error(e);var d=document.getElementById("errbar");if(!d){d=document.createElement("div");d.id="errbar";d.style.cssText="position:fixed;left:8px;right:8px;bottom:calc(env(safe-area-inset-bottom) + 76px);z-index:9998;background:#B4434A;color:#fff;padding:10px 12px;border-radius:12px;font:600 12px system-ui;white-space:pre-wrap";d.onclick=function(){d.remove()};document.body.appendChild(d)}var st=String(e&&e.stack||"").split("\n").slice(0,3).join(" | ");d.textContent="⚠️ Bug : "+(e&&e.message||e)+(st?"\n"+st:"")+"\n(Fais une capture pour Claude, touche pour fermer)"}catch(x){}}
+window.addEventListener("error",function(ev){showErr(ev.error||ev.message)});window.addEventListener("unhandledrejection",function(ev){var r=ev.reason;if(r&&r.message)showErr(r)});
 
 /* =====================================================
    ESPACE CLIENT
@@ -570,8 +572,8 @@ function loadCoach(){
     sb.from("mesures").select("*").order("created_at",{ascending:false}).limit(30),
     sb.from("photos").select("*").order("created_at",{ascending:false}).limit(30)
   ]).then(function(r){
-    C.clients=r[0].data||[];C.invs=r[1].data||[];C.feed={sf:r[2].data||[],m:r[3].data||[],ph:r[4].data||[]};render();return coachExtras()}).then(ciLoad).then(syncContacts).then(function(){render();
-  }).catch(err);
+    C.clients=r[0].data||[];C.invs=r[1].data||[];C.feed={sf:r[2].data||[],m:r[3].data||[],ph:r[4].data||[]};render();return coachExtras()}).then(function(){return ciLoad()}).then(syncContacts).then(function(){render();
+  }).catch(function(e){if(C.ciOk==null)C.ciOk=false;C.ciErr=C.ciErr||String(e&&e.message||e);try{render()}catch(x){showErr(x)}err(e)});
 }
 function cName(id){var c=C.clients.filter(function(x){return x.id===id})[0];return c?c.nom:"Client"}
 function renderCoachOld(){
@@ -1399,7 +1401,7 @@ document.addEventListener("click",function(e){if(!prof||prof.role!=="coach")retu
     openSheet("Assigner « "+(tp.data.titre||"modèle")+" »",'<div class="f"><label for="as_c">Client</label><select id="as_c">'+regs.map(function(c){return '<option value="'+c.client_id+'">'+esc(c.data.nom)+'</option>'}).join("")+'</select></div><div class="f"><label for="as_d">Début (semaine 1)</label><input id="as_d" type="date" value="'+ymd()+'"></div><div class="notice">Tu pourras ensuite l\'adapter dans sa fiche, onglet Programme.</div><button class="btn primary" id="as_ok">Envoyer dans son appli</button>',function(b){b.querySelector("#as_ok").onclick=function(){this.disabled=true;var pid=b.querySelector("#as_c").value;saveProgFor(pid,Object.assign({},tp.data,{debut:b.querySelector("#as_d").value})).then(function(){closeSheet();render()})}})}});
 
 /* ---------- accueil ---------- */
-function vAccueil(){var base=vFeed();if(!C.ciOk)return migrNotice()+base;
+function vAccueil(){var base=vFeed();if(C.ciOk==null)return '<div class="notice" style="text-align:center;padding:6px">Chargement de ton espace…</div>'+base;if(!C.ciOk)return migrNotice()+base;
   var today=ymd(),evs=ciAll("evt").filter(function(e){return e.data.date>=today&&!e.data.fait&&(e.data.type==="presentiel"||e.data.type==="distanciel"||e.data.type==="stage")}).sort(evSort).slice(0,5),dues=ciAll("evt").filter(function(e){return (e.data.type==="prog"||e.data.type==="rendu")&&!e.data.fait}).sort(evSort);
   var mk=today.slice(0,7),encM=0,att=[];ciAll("money").forEach(function(m){if(m.data.sens==="in"){if(m.data.statut==="paye"&&(m.data.date||"").slice(0,7)===mk)encM+=+m.data.montant||0;if(m.data.statut!=="paye")att.push(m)}});
   var obj=+settings().objMois||0;
