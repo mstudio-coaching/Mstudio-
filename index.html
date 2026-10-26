@@ -1732,6 +1732,16 @@ document.addEventListener("click",function(e){var t=e.target.closest("[data-fmt]
 function X(nom,series,reps,charge,repos,note,more){if(note&&typeof note==="object"){more=note;note=""}return Object.assign({nom:nom,series:String(series),reps:String(reps),charge:charge||"",repos:repos||"",note:note||""},more||{})}
 function wk6(build){var w=[];for(var i=0;i<6;i++)w.push({seances:build(i)});return w}
 var PROG_LIB=[
+ {id:"hoop_combo",titre:"Hula hoop · taille + genoux · 4 semaines",niveau:"Avancé · hula hoop multi-cerceaux",objectif:"Tenir un cerceau à la taille et un aux genoux en même temps, puis 3 cerceaux sur 2 zones + un bras",
+  consignes:"4 séances par semaine, ~30 min. Legging moulant (pas de pattes d'eph), pieds serrés, tous les cerceaux dans ton sens dominant, le plus léger aux genoux. Une seule onde en opposition : genoux vers l'avant = bassin en arrière, genoux tendus = bassin en avant. Petite amplitude, rapide, regard à l'horizon. On ne passe à la semaine suivante que si l'objectif est validé.",
+  gen:function(){var wu="Mobilité hanches et chevilles 1 min, puis onde à vide de profil devant le miroir, pieds serrés : 3 × 45 s";
+    var W=[
+     {nom:"Les genoux",obj:"1 min aux genoux sans chute",exos:[X("Genoux, 1 cerceau, pieds serrés",5,"1 min","","30 s","Reste droite : si tu te penches, le bassin ne pourra plus travailler"),X("Descente taille → genoux",3,"8 descentes","1 cerceau","45 s","Abaisse ton onde petit à petit : bassin, cuisses, genoux"),X("Taille, pieds serrés",3,"1 min","1 cerceau","30 s")]},
+     {nom:"Combo, méthode A",obj:"Combo taille + genoux tenu 30 s",exos:[X("Révision semaine 1",1,"10 min","","","Genoux + descentes"),X("Combo méthode A : genoux d'abord",10,"essais","2 cerceaux","30 s","Lance aux genoux, stabilise, redresse-toi sans t'arrêter, puis lance la taille"),X("Combo tenu",3,"max","2 cerceaux","60 s"),X("Descente taille → genoux → remontée aux cuisses",3,"5","1 cerceau","45 s")]},
+     {nom:"Méthode B + endurance",obj:"Combo 1 min avec les deux méthodes d'entrée",exos:[X("Méthode B : 2 cerceaux lancés à la taille",10,"essais","2 cerceaux","30 s","Ne laisse descendre que celui du bas, le bassin garde l'autre"),X("Combo tenu",4,"1 min","2 cerceaux","60 s"),X("Combo + transitions de bras",3,"5 transitions","2 cerceaux","60 s","Bras en croix, au-dessus de la tête, devant")]},
+     {nom:"On charge",obj:"3 cerceaux sur 2 zones, plus un bras",exos:[X("2 à la taille + 1 aux genoux",10,"essais","3 cerceaux","30 s"),X("2 à la taille + 1 aux genoux, tenu",3,"max","3 cerceaux","60 s"),X("Taille + genoux + 1 cerceau sur le bras tendu",3,"max","3 cerceaux","60 s","Bras fixe, le poignet fait de petits cercles. Fin de semaine : filme-toi de profil")]}
+    ];
+    return W.map(function(w,i){var out=[];for(var k=1;k<=4;k++)out.push({nom:"S"+(i+1)+" · Séance "+k+" · "+w.nom,echauffement:wu+". Objectif de la semaine : "+w.obj,exos:w.exos.map(function(e){return Object.assign({},e)})});return {seances:out}})}},
  {id:"maison",titre:"Remise en forme maison · 6 semaines",niveau:"Débutant · à la maison",objectif:"Perte de poids et remise en route en douceur : 3 renfos + marche sur tapis",
   consignes:"Ressenti visé : 6-7/10, tu dois pouvoir parler. Ne jamais rater deux jours d'affilée. Une douleur articulaire = on réduit l'amplitude ou on saute l'exercice, et on prévient sa coach. 1,5 L d'eau par jour.",
   gen:function(){var M=[[20,"à plat"],[25,"1 % de pente"],[30,"4 × (2 min à 6 % / 2 min à 1 %)"],[30,"6 × (2 min à 6-8 % / 2 min à 1 %)"],[35,"5 × (3 min à 8 % / 2 min à 1 %)"],[40,"10 min réguliers + 6 × (3 min à 8-10 % / 1 min 30 à 1 %)"]];
@@ -2180,7 +2190,7 @@ lvlCard=guardFn(lvlCard,"");dispoBanner=guardFn(dispoBanner,"");defisCardClient=
 adaptS=guardFn(adaptS,function(s){return s});pauseDays=guardFn(pauseDays,0);dispoOf=guardFn(dispoOf,function(){return []});checkLevelUp=guardFn(checkLevelUp,null);
 
 /* ---------- mises à jour automatiques + Quoi de neuf ---------- */
-var APP_V="2026-10-26";
+var APP_V="2026-10-26.1";
 var NEWS=[{v:"2026-10-26",t:"Séance en duo 👯",i:["Fais ta séance en même temps qu'un·e ami·e, chacun sur son téléphone, même à distance","Vous voyez la progression de l'autre en direct, le coach vocal annonce ses séries","Bouton 🔥 pour encourager ton binôme, et +30 XP par séance en duo"]},
  {v:"2026-10-24.3",t:"Assistant, défis et calendrier",i:["💬 Assistant M Studio : réponses immédiates (remplacer un exo, nutrition, charges, prochaine séance…), et transmission à ta coach si besoin","🏆 Défis collectifs entre adhérents avec barre commune et podium","📅 Mon calendrier : semaine chargée = version express, vacances = poids du corps, pause = programme décalé"]},
  {v:"2026-10-24.2",t:"5 nouveautés waouh",i:["🔊 Coach vocal pendant les séances et les minuteurs (activable / désactivable)","👑 Niveaux, XP et 24 badges à débloquer","🎁 Ton récap du mois façon story, à partager sur Insta","▶️ Ton évolution photo en animation, et en vidéo à partager","🎲 Séance surprise : choisis ton temps, ton matériel et ton énergie, l'appli crée ta séance"]},
