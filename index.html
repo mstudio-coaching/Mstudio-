@@ -1827,6 +1827,41 @@ PROG_LIB.push({id:"crossfit-rx",titre:"CrossFit RX & Running · 6 semaines",nive
    return [J1,J2,J3,J4,J5,J6]})}});
 
 
+/* ---------- programme HYROX 6 semaines ---------- */
+PROG_LIB.push({id:"hyrox",titre:"HYROX · 6 semaines",niveau:"Avancé · salle équipée (traîneau, SkiErg, rameur) · J6 optionnel",objectif:"Préparer une course HYROX : course à pied, 8 stations, run compromis, et force des fessiers / jambes qui fait la différence au traîneau",
+ consignes:"Charges HYROX Women Open (Pro entre parenthèses) : sled push 102 kg traîneau compris (152), sled pull 78 kg (103), farmers 2 × 16 kg (2 × 24), sandbag 10 kg (20), wall ball 4 kg (6) sur cible à 2,70 m (3 m).\nAllure course HYROX = l'allure que tu peux tenir sur 8 km entrecoupés de stations : environ ton allure 10 km + 15 à 25 s/km.\nSemaines 1-2 = base, 3-4 = on charge, 5 = simulation complète, 6 = affûtage (ou semaine de course).\nPas de traîneau ? Sled push = pousser une voiture au point mort ou des sprints en côte lestés ; sled pull = tirage à la corde avec un poids sur le sol glissant, ou rowing lourd.\nRègle d'or : techniques propres sous la fatigue, surtout aux wall balls et aux fentes. Dors, mange assez de glucides les jours de grosse séance, et allège si ton énergie est basse.",
+ gen:function(){var HX_WU="5 min rameur ou SkiErg facile, 10 squats, 10 fentes arrière, 10 ponts fessiers, 10 good mornings, 3 accélérations de 15 s.";
+  var SQ=[["5","5","70%","2 min"],["5","5","75%","2 min"],["5","4","80%","2 min 30"],["4","3","85%","3 min"],["4","3","85%","2 min 30"],["3","3","70%","2 min"]];
+  var HT=[["4","10","RIR 2"],["4","10","RIR 2"],["4","8","RIR 1"],["4","8","RIR 1"],["4","6","RIR 1"],["3","10","RIR 4"]];
+  var RUNI=[["6","800 m","allure 5 km","1 min 30"],["5","1000 m","allure course HYROX − 10 s/km","1 min 30"],["8","600 m","allure 3-5 km","1 min 15"],["6","1000 m","allure course HYROX − 10 s/km","1 min 15"],["4","1200 m","allure 10 km","1 min 30"],["4","600 m","relâché, allure 10 km","1 min 30"]];
+  var SKI=[["5","250 m","rapide","1 min"],["4","500 m","allure course","1 min 30"],["6","250 m","très rapide","1 min"],["3","750 m","allure course","2 min"],["4","500 m","allure course","1 min"],["3","250 m","facile, propre","1 min"]];
+  return wk6(function(i){var dl=i===5;
+   var J1={nom:"J1 · Force bas du corps & fessiers",echauffement:HX_WU+" Puis 2 séries de montée en charge au squat.",exos:[X("Back squat",SQ[i][0],SQ[i][1],SQ[i][2],SQ[i][3],i===0?"Si tu ne connais pas ton 1RM, fais la 1re série à une charge que tu pourrais soulever 8 fois : l'appli ajustera.":""),
+     X("Hip thrust",HT[i][0],HT[i][1],HT[i][2],"2 min","Pause 1 s en haut, menton rentré, bassin en rétroversion."),X("Fente bulgare",3,dl?"8 / jambe":"10 / jambe",dl?"RIR 4":"RIR 2","",{lien:true}),X("Soulevé de terre roumain haltères",3,"10",dl?"RIR 4":"RIR 2","90 s")].concat(
+     G("emom",[10,10,12,12,14,8][i],0,[X("Wall balls",1,dl?"10":i<2?"15":"18","4 kg (6 kg)",""),X("Burpee broad jumps",1,dl?"5":i<2?"8":"10","","","Saut loin, pieds ensemble, poitrine au sol à chaque rep.")]))};
+   var J2={nom:"J2 · Run fractionné + SkiErg",echauffement:"10 min de footing, gammes (montées de genoux, talons-fesses), 3 accélérations de 80 m.",exos:[X("Course fractionnée",RUNI[i][0],RUNI[i][1],RUNI[i][2],RUNI[i][3],"Récup en trottinant. Le dernier aussi vite que le premier."),
+     X("SkiErg",SKI[i][0],SKI[i][1],SKI[i][2],SKI[i][3],"Tire avec les hanches et le gainage, pas seulement les bras."),X("Planche",3,"45 s","","30 s",{lien:true}),X("Dead bug",3,"10 / côté","","45 s")]};
+   var st=[[3,"25 m"],[3,"25 m"],[4,"25 m"],[4,"25 m"],[5,"25 m"],[2,"25 m"]][i];
+   var J3={nom:"J3 · Stations HYROX : force-endurance",echauffement:HX_WU+" Quelques poussées et tirages de traîneau légers pour la technique.",exos:[
+     X("Sled push",st[0]*2,"12,5 m",i<2?"80 kg traîneau compris":i<5?"110-120 kg (plus lourd que la course)":"80 kg","1 min 30","Bras tendus, corps penché à 45°, petits pas rapides."),
+     X("Sled pull",st[0]*2,"12,5 m",i<2?"60 kg":i<5?"85-90 kg":"60 kg","1 min 30","Recule en tirant main sur main, jambes fléchies, gainé.")].concat(
+     G("fortime",[18,18,22,22,25,12][i],dl?1:i<2?2:3,[X("Farmers carry",1,"100 m","2 × 16 kg (2 × 24)",""),X("Sandbag lunges",1,dl?"25 m":"50 m","10 kg (20)","","Genou arrière qui touche le sol à chaque pas."),X("Wall balls",1,dl?"15":"25","4 kg (6 kg)",""),X("Burpee broad jumps",1,"20 m","","")]))};
+   var J4={nom:"J4 · Haut du corps, fessiers & moteur",echauffement:"5 min rameur, rotations d'épaules, 10 pompes, 10 tractions scapulaires, 15 ponts fessiers.",exos:[
+     X("Tractions strictes",4,dl?"4":i<2?"6":"5",dl?"Poids du corps":i<2?"Poids du corps":"Lestées si possible, RIR 2","",{lien:true}),X("Strict press (développé militaire)",4,i<2?"8":"6",dl?"RIR 4":"RIR 2","2 min"),
+     X("Rowing barre",3,"10",dl?"RIR 4":"RIR 2","",{lien:true}),X("Pompes",3,dl?"8":"12","","90 s"),
+     X("Abduction de hanche (machine ou mini-bande)",3,"15","RIR 1","",{lien:true}),X("Kickback fessier à la poulie ou à l'élastique",3,"12 / jambe","RIR 1","60 s")].concat(
+     G("amrap",[10,12,12,14,14,8][i],0,[X("Rameur",1,"15 cal","",""),X("Swing kettlebell",1,"15","16-20 kg",""),X("Burpees",1,"8","","")]))};
+   var J5=[
+    {nom:"J5 · Simulation : demi-HYROX (distances réduites)",exos:G("fortime",45,1,[X("Course",1,"1 km","allure course HYROX",""),X("SkiErg",1,"500 m","",""),X("Course",1,"1 km","",""),X("Sled push",1,"25 m","102 kg (152)",""),X("Course",1,"1 km","",""),X("Rameur",1,"500 m","",""),X("Course",1,"1 km","",""),X("Wall balls",1,"50","4 kg (6 kg)","","Note ton temps : on compare en semaine 5.")])},
+    {nom:"J5 · Run compromis",exos:G("circuit",0,5,[X("Course",1,"1 km","allure course HYROX",""),X("Wall balls",1,"20","4 kg (6 kg)",""),X("Burpee broad jumps",1,"20 m","","1 min","Objectif : courir le km suivant à la même allure malgré les jambes lourdes.")])},
+    {nom:"J5 · Simulation : 1re moitié HYROX",exos:G("fortime",50,1,[X("Course",1,"1 km","allure course HYROX",""),X("SkiErg",1,"1000 m","",""),X("Course",1,"1 km","",""),X("Sled push",1,"50 m","102 kg (152)",""),X("Course",1,"1 km","",""),X("Sled pull",1,"50 m","78 kg (103)",""),X("Course",1,"1 km","",""),X("Burpee broad jumps",1,"80 m","","")])},
+    {nom:"J5 · Simulation : 2de moitié HYROX",exos:G("fortime",50,1,[X("Course",1,"1 km","allure course HYROX",""),X("Rameur",1,"1000 m","",""),X("Course",1,"1 km","",""),X("Farmers carry",1,"200 m","2 × 16 kg (2 × 24)",""),X("Course",1,"1 km","",""),X("Sandbag lunges",1,"100 m","10 kg (20)",""),X("Course",1,"1 km","",""),X("Wall balls",1,"100","4 kg (6 kg)","","Par séries de 20-25, pauses courtes et prévues.")])},
+    {nom:"J5 · 🏁 Simulation HYROX complète",exos:G("fortime",100,1,[X("Course",1,"1 km","allure course HYROX","","Pars plus lentement que tu crois sur les 2 premiers km !"),X("SkiErg",1,"1000 m","",""),X("Course",1,"1 km","",""),X("Sled push",1,"50 m","102 kg (152)",""),X("Course",1,"1 km","",""),X("Sled pull",1,"50 m","78 kg (103)",""),X("Course",1,"1 km","",""),X("Burpee broad jumps",1,"80 m","",""),X("Course",1,"1 km","",""),X("Rameur",1,"1000 m","",""),X("Course",1,"1 km","",""),X("Farmers carry",1,"200 m","2 × 16 kg (2 × 24)",""),X("Course",1,"1 km","",""),X("Sandbag lunges",1,"100 m","10 kg (20)",""),X("Course",1,"1 km","",""),X("Wall balls",1,"100","4 kg (6 kg)","","Ton temps = ton chrono de référence pour la course.")])},
+    {nom:"J5 · Affûtage : rappel d'allure",exos:G("circuit",0,4,[X("Course",1,"500 m","allure course HYROX",""),X("Wall balls",1,"20","4 kg (6 kg)",""),X("Rameur",1,"250 m","","2 min","Tu dois finir en te sentant fraîche : c'est le but.")])}][i];
+   J5.echauffement=HX_WU+(i===4?" Teste ta tenue, tes chaussures et ton petit-déj de course.":"");
+   var J6={nom:"J6 · Endurance facile (optionnel)",echauffement:"Commence très tranquille.",exos:[X("Course zone 2",1,[45,50,55,60,45,30][i]+" min","footing (70 % VMA)","","Tu dois pouvoir parler. Ça construit le moteur sans fatiguer."),X("Mobilité hanches, chevilles, thoracique",1,"10 min","","")]};
+   return [J1,J2,J3,J4,J5,J6]})}});
+
 /* =====================================================
    WAOUH : coach vocal, niveaux & badges, récap du mois, évolution photo, séance surprise
    ===================================================== */
@@ -2191,8 +2226,9 @@ lvlCard=guardFn(lvlCard,"");dispoBanner=guardFn(dispoBanner,"");defisCardClient=
 adaptS=guardFn(adaptS,function(s){return s});pauseDays=guardFn(pauseDays,0);dispoOf=guardFn(dispoOf,function(){return []});checkLevelUp=guardFn(checkLevelUp,null);
 
 /* ---------- mises à jour automatiques + Quoi de neuf ---------- */
-var APP_V="2026-10-26.3";
-var NEWS=[{v:"2026-10-26",t:"Séance en duo 👯",i:["Fais ta séance en même temps qu'un·e ami·e, chacun sur son téléphone, même à distance","Vous voyez la progression de l'autre en direct, le coach vocal annonce ses séries","Bouton 🔥 pour encourager ton binôme, et +30 XP par séance en duo"]},
+var APP_V="2026-10-26.4";
+var NEWS=[{v:"2026-10-26.4",t:"Programme HYROX",i:["Nouveau programme prêt à l'emploi : HYROX 6 semaines (course, 8 stations, run compromis, simulation complète)"]},
+ {v:"2026-10-26",t:"Séance en duo 👯",i:["Fais ta séance en même temps qu'un·e ami·e, chacun sur son téléphone, même à distance","Vous voyez la progression de l'autre en direct, le coach vocal annonce ses séries","Bouton 🔥 pour encourager ton binôme, et +30 XP par séance en duo"]},
  {v:"2026-10-24.3",t:"Assistant, défis et calendrier",i:["💬 Assistant M Studio : réponses immédiates (remplacer un exo, nutrition, charges, prochaine séance…), et transmission à ta coach si besoin","🏆 Défis collectifs entre adhérents avec barre commune et podium","📅 Mon calendrier : semaine chargée = version express, vacances = poids du corps, pause = programme décalé"]},
  {v:"2026-10-24.2",t:"5 nouveautés waouh",i:["🔊 Coach vocal pendant les séances et les minuteurs (activable / désactivable)","👑 Niveaux, XP et 24 badges à débloquer","🎁 Ton récap du mois façon story, à partager sur Insta","▶️ Ton évolution photo en animation, et en vidéo à partager","🎲 Séance surprise : choisis ton temps, ton matériel et ton énergie, l'appli crée ta séance"]},
  {v:"2026-10-24",t:"Mises à jour automatiques",i:["L'appli détecte toute seule les nouvelles versions et te propose de mettre à jour en un tap","Cette fenêtre « Quoi de neuf » à chaque nouveauté"]},
