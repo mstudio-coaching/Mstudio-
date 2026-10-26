@@ -270,7 +270,7 @@ details.cons summary{font-weight:700;cursor:pointer}
 <script>
 (function(){
 var CFG=window.MSTUDIO||{}, sb=null, me=null, prof=null, tab=null;
-var D={prog:null,done:[],mesures:[],photos:[]};var SELF=false;      // client data
+var D={prog:null,done:[],mesures:[],photos:[]};var SELF=false;function isCoachUI(){return !!(prof&&prof.role==="coach"&&!SELF)}      // client data
 var C={clients:[],invs:[],sel:null,selTab:"prog",act:null}; // coach data
 var weekSel=null, urlCache={};
 var $=function(id){return document.getElementById(id)};
@@ -456,7 +456,7 @@ function markDone(si,det){
   });
 }
 document.addEventListener("click",function(e){
-  var t=e.target.closest("[data-wk],[data-done],[data-redo]");if(!t||!prof||prof.role==="coach")return;
+  var t=e.target.closest("[data-wk],[data-done],[data-redo]");if(!t||!prof||isCoachUI())return;
   if(t.dataset.wk!=null){weekSel=+t.dataset.wk;render()}
   else if(t.dataset.done!=null)markDone(+t.dataset.done);
   else if(t.dataset.redo!=null)markDone(+t.dataset.redo);
@@ -544,7 +544,7 @@ function bindPhotos(){
   };
 }
 document.addEventListener("click",function(e){var t=e.target.closest("[data-ph]");if(!t)return;
-  var list=prof.role==="coach"&&C.act?C.act.photos:D.photos, p=list.filter(function(x){return x.id===t.dataset.ph})[0];if(!p)return;
+  var list=isCoachUI()&&C.act?C.act.photos:D.photos, p=list.filter(function(x){return x.id===t.dataset.ph})[0];if(!p)return;
   openSheet(fdate(p.date)+" · "+(ANG[p.angle]||""),'<img class="big-img" alt="" src="'+esc(urlCache[p.path]||"")+'"><button class="btn danger" id="phd">Supprimer la photo</button>',function(b){
     var d=b.querySelector("#phd");d.onclick=function(){if(d.dataset.sure!=="1"){d.dataset.sure="1";d.textContent="Confirmer la suppression";return}
       sb.storage.from("photos").remove([p.path]).then(function(){return sb.from("photos").delete().eq("id",p.id)}).then(function(x){if(x&&x.error)return err(x.error);
@@ -600,7 +600,7 @@ function vClients(){
   return '<div class="panel">'+(C.clients.length?C.clients.map(function(c){var last=(C.feed.sf||[]).filter(function(x){return x.client_id===c.id})[0];
     return '<button class="row tap" data-cl="'+c.id+'"><div class="avatar">'+esc(initials(c.nom))+'</div><div class="grow"><div class="t">'+esc(c.nom)+'</div><div class="s">'+(last?'Dernière séance le '+fdate(last.done_at):'Aucune séance validée')+'</div></div>'+((C.unread||{})[c.id]?'<span class="chip">💬 '+C.unread[c.id]+'</span>':'')+(function(v){return v==null?'':'<span class="chip '+(v>=80?'ok':v>=50?'':'warn')+'" title="Assiduité">'+v+' %</span>'})(assid(c.id))+'<span aria-hidden="true">›</span></button>'}).join(""):'<div class="empty">Pas encore de client. Crée une invitation dans l\'onglet Inviter.</div>')+'</div>';
 }
-document.addEventListener("click",function(e){var t=e.target.closest("[data-cl]");if(!t||!prof||prof.role!=="coach")return;(function(){var k=C.ciOk&&contactOfProfile(t.dataset.cl);if(k)openContact(k.id,t.dataset.ctab);else openClient(t.dataset.cl,t.dataset.ctab)})()});
+document.addEventListener("click",function(e){var t=e.target.closest("[data-cl]");if(!t||!prof||!isCoachUI())return;(function(){var k=C.ciOk&&contactOfProfile(t.dataset.cl);if(k)openContact(k.id,t.dataset.ctab);else openClient(t.dataset.cl,t.dataset.ctab)})()});
 function openClient(id,tb){
   C.sel=id;C.selTab=tb||C.selTab||"prog";C.act=null;render();
   Promise.all([
@@ -823,7 +823,7 @@ function startTimer(sec,pre){stopTimer();if(!sec){if(pre)say(pre);return}say((pr
   function tick(){var r=Math.max(0,Math.round((end-Date.now())/1000));var el=$("tmVal");if(!el){stopTimer();return}el.textContent=Math.floor(r/60)+":"+String(r%60).padStart(2,"0");$("tmBar").style.width=(100-r/sec*100)+"%";if(r===10&&!s10&&sec>20){s10=1;say("Plus que 10 secondes")}if(r<=0){stopTimer();beep();toast("C'est reparti 💪");say("C'est reparti ! "+cheer())}}
   tick();tmInt=setInterval(tick,250);
   $("tmPlus").onclick=function(){end+=15000;sec+=15};$("tmSkip").onclick=function(){stopTimer()};}
-document.addEventListener("click",function(e){var t=e.target.closest("[data-start]");if(!t||!prof||prof.role==="coach")return;startSession(+t.dataset.start)});
+document.addEventListener("click",function(e){var t=e.target.closest("[data-start]");if(!t||!prof||isCoachUI())return;startSession(+t.dataset.start)});
 
 /* ---------- coach : alertes, assiduité ---------- */
 function coachExtras(){
@@ -1199,7 +1199,7 @@ function vClientsN(){
       (un?'<span class="chip">💬 '+un+'</span>':'')+(due?'<span class="chip warn">'+eur(due)+'</span>':'')+(pk?'<span class="chip mute">'+packLeft(pk)+'/'+pk.data.nb+'</span>':'')+(a!=null?'<span class="chip '+(a>=80?'ok':a>=50?'':'warn')+'">'+a+' %</span>':'')+(pid?'':'<span class="chip mute">Sans appli</span>')+'</button>'}).join(""):'<div class="empty">'+(q?'Aucun résultat.':'Pas encore de client. Appuie sur + pour en ajouter un.')+'</div>')+'</div>';
 }
 document.addEventListener("input",function(e){if(e.target.id!=="cq")return;C.q=e.target.value;var p=e.target.selectionStart;render();var el=$("cq");if(el){el.focus();try{el.setSelectionRange(p,p)}catch(_){}}});
-document.addEventListener("click",function(e){var t=e.target.closest("[data-cto]");if(!t||!prof||prof.role!=="coach")return;openContact(t.dataset.cto,t.dataset.ctab)});
+document.addEventListener("click",function(e){var t=e.target.closest("[data-cto]");if(!t||!prof||!isCoachUI())return;openContact(t.dataset.cto,t.dataset.ctab)});
 
 function vContact(){
   var c=ciGet(C.selC);if(!c){C.selC=null;return render()}
@@ -1239,7 +1239,7 @@ function cInfos(c){var d=c.data,reg=!!c.client_id,a=C.act;
   h+='<section><h2 class="sec">Prochains rendez-vous</h2><div class="panel">'+(evs.length?evs.map(function(e){return evRowN(e,true)}).join(""):'<div class="empty">Aucun RDV prévu.</div>')+'</div></section>';
   if(reg){if(!a)h+='<div class="empty">Chargement de sa fiche…</div>';else h+='<section><h2 class="sec">Fiche santé</h2>'+(a.ficheOk?ficheHtml(a.fiche):'<div class="panel pad">Fiche santé pas encore activée.</div>')+'</section><section><h2 class="sec">Besoins nutritionnels estimés</h2>'+nutriHtml(a.fiche,a.mesures,true)+'</section>'}
   return h}
-document.addEventListener("click",function(e){var t=e.target.closest("[data-act-c]");if(!t||!prof||prof.role!=="coach")return;var c=ciGet(C.selC),k=t.dataset.actC;if(!c)return;
+document.addEventListener("click",function(e){var t=e.target.closest("[data-act-c]");if(!t||!prof||!isCoachUI())return;var c=ciGet(C.selC),k=t.dataset.actC;if(!c)return;
   if(k==="rdv")editEvt({data:{cid:c.id,type:c.data.mode==="distanciel"?"distanciel":"presentiel",date:ymd(),duree:1}});
   else if(k==="pay")editMoney({data:{cid:c.id,sens:"in",statut:"attente",date:ymd(),montant:c.data.tarif||"",libelle:"Séance "+c.data.nom,categorie:"Séance"}});
   else if(k==="pack")editPack({data:{cid:c.id,nb:10,debut:ymd(),libelle:"Pack 10 séances"}});
@@ -1264,7 +1264,7 @@ function editMoney(m){m=m.id?m:{kind:"money",data:Object.assign({sens:"in",statu
 function editPack(p){p=p.id?p:{kind:"pack",data:Object.assign({nb:10,debut:ymd(),paye:"attente"},p.data||{})};
   cform(p.id?"Modifier le pack":"Nouveau pack de séances",[{k:"cid",label:"Client",type:"contact",req:true},{k:"libelle",label:"Nom du pack",ph:"Pack 10 séances"},{k:"nb",label:"Nombre de séances",type:"number",req:true,half:true},{k:"prix",label:"Prix (€)",type:"number",half:true},{k:"debut",label:"Début (les séances faites depuis cette date sont décomptées)",type:"date"},{k:"paye",label:"Paiement",type:"select",opts:[["attente","À encaisser"],["paye","Déjà payé"],["","Ne pas créer de paiement"]]}],p.data,
     function(n){var isNew=!p.id;p.data=n;var c=ciGet(n.cid);p.client_id=c?c.client_id:null;return ciSave(p).then(function(){if(isNew&&n.paye&&n.prix)return ciSave({kind:"money",client_id:p.client_id,data:{sens:"in",montant:n.prix,libelle:n.libelle||"Pack de séances",date:n.debut||ymd(),statut:n.paye,categorie:"Pack séances",cid:n.cid}})})},p.id?{onDel:function(){return ciDel(p.id)}}:null)}
-document.addEventListener("click",function(e){if(!prof||prof.role!=="coach")return;var t;
+document.addEventListener("click",function(e){if(!prof||!isCoachUI())return;var t;
   if((t=e.target.closest("[data-mon]")))editMoney(ciGet(t.dataset.mon));
   else if((t=e.target.closest("[data-paid]"))){var m=ciGet(t.dataset.paid);m.data.statut="paye";ciSave(m).then(function(){toast("Marqué payé");render()})}
   else if((t=e.target.closest("[data-pack]")))editPack(ciGet(t.dataset.pack));
@@ -1293,7 +1293,7 @@ function vAgendaN(){if(!C.ciOk)return migrNotice();
    '<div class="legend">'+Object.keys(EVT).map(function(k){return '<span class="chip '+EVT[k].c+'">'+EVT[k].l+'</span>'}).join("")+'</div>'+
    '<section><h2 class="sec" style="display:flex;align-items:center;gap:8px"><span class="grow">'+fdate(sel)+'</span><button class="btn sm" data-newevt="1">+ Ajouter</button></h2><div class="panel">'+(list.length?list.map(function(e){return evRowN(e,false)}).join(""):'<div class="empty">Journée libre.</div>')+'</div></section>'+
    '<div class="panel pad"><div style="display:flex;align-items:baseline;gap:8px"><span class="k">Heures de stage</span><span class="grow"></span><b>'+sh+' / '+sg+' h</b></div><div class="bar"><i style="width:'+Math.min(100,Math.round(sh/sg*100))+'%;background:var(--stage)"></i></div><div class="notice" style="margin-top:6px">Compte les événements « Stage » cochés.</div></div>'+slotsCoachHtml()}
-document.addEventListener("click",function(e){if(!prof||prof.role!=="coach")return;var t;
+document.addEventListener("click",function(e){if(!prof||!isCoachUI())return;var t;
   if((t=e.target.closest("[data-day]"))){C.calSel=t.dataset.day;var d=pd(C.calSel);var cm=C.calMonth||new Date();if(d.getMonth()!==cm.getMonth())C.calMonth=new Date(d.getFullYear(),d.getMonth(),1);render()}
   else if((t=e.target.closest("[data-mv]"))){var v=+t.dataset.mv,c2=C.calMonth||new Date();C.calMonth=v?new Date(c2.getFullYear(),c2.getMonth()+v,1):new Date();if(!v)C.calSel=ymd();render()}
   else if(e.target.closest("[data-newevt]"))editEvt({data:{date:C.calSel||ymd()}})});
@@ -1394,7 +1394,7 @@ function vProgsN(){if(!C.ciOk)return migrNotice();var l=ciAll("tpl").slice().sor
    '<section><h2 class="sec">Mes modèles</h2><div class="panel">'+(l.length?l.map(function(t){return '<div class="row"><button class="grow plain" data-etpl="'+t.id+'"><div class="t">'+esc(t.data.titre||"Modèle")+'</div><div class="s">'+progSummary(t.data)+'</div></button><button class="btn sm primary" data-atpl="'+t.id+'">Assigner</button></div>'}).join(""):'<div class="empty">Crée un modèle (ex. « Full body débutant 6 semaines ») pour l\'assigner en 2 secondes à n\'importe quel client.</div>')+'</div></section>'+
    libHtml()+'<section><h2 class="sec">Programmes en cours</h2><div class="panel">'+(act.length?act.map(function(c){var p=C.progs[c.client_id],cw=curWeek(p),v=assid(c.client_id);return '<button class="row tap" data-cto="'+c.id+'" data-ctab="prog"><div class="grow"><div class="t">'+esc(c.data.nom)+'</div><div class="s">'+esc(p.titre)+' · S'+(cw+1)+' / '+weeksOf(p).length+'</div></div>'+(v!=null?'<span class="chip '+(v>=80?'ok':v>=50?'':'warn')+'">'+v+' %</span>':'')+'</button>'}).join(""):'<div class="empty">Aucun programme actif.</div>')+'</div></section>'+
    videosHtml()+'<div class="notice">Dans un programme, « + Séance type » ajoute en un clic : full body, bas / haut du corps, abdos, HIIT sans saut, marche inclinée, dos & posture, mobilité.</div>'}
-document.addEventListener("click",function(e){if(!prof||prof.role!=="coach")return;var t;
+document.addEventListener("click",function(e){if(!prof||!isCoachUI())return;var t;
   if(e.target.closest("[data-ntpl]"))editProgram({},{title:"Nouveau modèle",onSave:function(p){return ciSave({kind:"tpl",data:{titre:p.titre,objectif:p.objectif,consignes:p.consignes,weeks:p.weeks}})}});
   else if((t=e.target.closest("[data-etpl]"))){var it=ciGet(t.dataset.etpl);editProgram(it.data,{title:"Modifier le modèle",onSave:function(p){it.data={titre:p.titre,objectif:p.objectif,consignes:p.consignes,weeks:p.weeks};return ciSave(it)},onDel:function(){return ciDel(it.id)}})}
   else if((t=e.target.closest("[data-atpl]"))){var tp=ciGet(t.dataset.atpl),regs=contacts().filter(function(c){return c.client_id});
@@ -1419,8 +1419,8 @@ function openSettings(){var s=ciAll("settings")[0]||{kind:"settings",data:{stage
 function openAnnonce(){var regs=contacts().filter(function(c){return c.client_id});
   openSheet("Annonce à tous",'<div class="notice">Envoyée en message à tes '+regs.length+' client(s) inscrit(s) : nouveaux créneaux, vacances, défi du mois…</div><div class="f"><label for="an_t">Message</label><textarea id="an_t" rows="5"></textarea></div><button class="btn primary" id="an_ok">Envoyer à tous</button>',function(b){b.querySelector("#an_ok").onclick=function(){var v=b.querySelector("#an_t").value.trim();if(!v||!regs.length)return;this.disabled=true;
     sb.from("messages").insert(regs.map(function(c){return {client_id:c.client_id,from_coach:true,body:"📣 "+v}})).then(function(x){if(x.error)return err(x.error);closeSheet();toast("Annonce envoyée à "+regs.length+" client(s)")})}})}
-document.addEventListener("click",function(e){var gt=e.target.closest("[data-gotab]");if(gt&&prof&&prof.role==="coach"){tab=gt.dataset.gotab;C.selC=null;render();window.scrollTo(0,0)}});
-document.addEventListener("click",function(e){if(!prof||prof.role!=="coach")return;if(e.target.closest("[data-tools]"))openTools();else if(e.target.closest("[data-annonce]"))openAnnonce();else if(e.target.closest("[data-settings]"))openSettings()});
+document.addEventListener("click",function(e){var gt=e.target.closest("[data-gotab]");if(gt&&prof&&isCoachUI()){tab=gt.dataset.gotab;C.selC=null;render();window.scrollTo(0,0)}});
+document.addEventListener("click",function(e){if(!prof||!isCoachUI())return;if(e.target.closest("[data-tools]"))openTools();else if(e.target.closest("[data-annonce]"))openAnnonce();else if(e.target.closest("[data-settings]"))openSettings()});
 
 /* ---------- import du Carnet Coach ---------- */
 function openImport(){
@@ -1476,7 +1476,7 @@ function habitsCard(){if(!D.habOk)return '';var cfg=habCfg(D.ci),t=ymd(),row=(D.
    HAB.map(function(h){var x=+v[h[0]]||0,ok=h[0]==="mobilite"?x>=1:x>=cfg[h[0]];
      if(h[0]==="mobilite")return '<div class="hb'+(ok?' ok':'')+'"><span class="hi">'+h[1]+'</span><span class="grow">'+h[2]+'</span><button class="tg'+(ok?' on':'')+'" data-hab="mobilite" data-set="'+(ok?0:1)+'">'+(ok?'✓ Fait':'À faire')+'</button></div>';
      return '<div class="hb'+(ok?' ok':'')+'"><span class="hi">'+h[1]+'</span><span class="grow">'+h[2]+'<span class="s"> · objectif '+fnum(cfg[h[0]])+(h[3]?' '+h[3]:'')+'</span></span><button class="st" data-hab="'+h[0]+'" data-d="-'+h[4]+'" aria-label="Moins">−</button><b class="hv">'+(h[0]==="pas"?x.toLocaleString("fr-FR"):fnum(x))+'</b><button class="st" data-hab="'+h[0]+'" data-d="'+h[4]+'" aria-label="Plus">+</button></div>'}).join("")+'</div>'}
-document.addEventListener("click",function(e){var t=e.target.closest("[data-hab]");if(!t||!prof||prof.role==="coach")return;var k=t.dataset.hab,day=ymd(),row=(D.habs||[]).filter(function(r){return r.date===day})[0];
+document.addEventListener("click",function(e){var t=e.target.closest("[data-hab]");if(!t||!prof||isCoachUI())return;var k=t.dataset.hab,day=ymd(),row=(D.habs||[]).filter(function(r){return r.date===day})[0];
   if(!row){row={client_id:me.id,date:day,data:{}};D.habs.push(row)}var v=row.data;
   if(t.dataset.set!=null)v[k]=+t.dataset.set;else v[k]=Math.max(0,Math.round(((+v[k]||0)+(+t.dataset.d))*10)/10);
   var y=window.scrollY;render();window.scrollTo(0,y);
@@ -1503,14 +1503,14 @@ document.addEventListener("click",function(e){if(e.target.closest("[data-repas-a
 
 /* ---------- vidéos de démo ---------- */
 function videoFor(nom,list){var n=(nom||"").trim().toLowerCase();return (list||[]).filter(function(i){return i.kind==="video"&&(i.data.nom||"").trim().toLowerCase()===n})[0]}
-function demoBtn(nom){var v=videoFor(nom,prof&&prof.role==="coach"?CI:D.ci);return v?'<button class="demo vid" data-vid="'+esc(v.data.path)+'" data-vn="'+esc(nom)+'">▶ Démo vidéo</button>':'<a class="demo" href="'+demoUrl(nom)+'" target="_blank" rel="noopener">▶ Démo</a>'}
+function demoBtn(nom){var v=videoFor(nom,prof&&isCoachUI()?CI:D.ci);return v?'<button class="demo vid" data-vid="'+esc(v.data.path)+'" data-vn="'+esc(nom)+'">▶ Démo vidéo</button>':'<a class="demo" href="'+demoUrl(nom)+'" target="_blank" rel="noopener">▶ Démo</a>'}
 document.addEventListener("click",function(e){var t=e.target.closest("[data-vid]");if(!t)return;var url=sb.storage.from("demos").getPublicUrl(t.dataset.vid).data.publicUrl;
   var host=$("vidHost");if(!host){host=document.createElement("div");host.id="vidHost";document.body.appendChild(host)}
   host.innerHTML='<div class="scrim" style="z-index:70;align-items:center"><div class="vbox"><div style="display:flex;align-items:center;gap:8px;padding:10px 12px"><b class="grow">'+esc(t.dataset.vn||"Démo")+'</b><button class="btn sm ghost" id="vclose">Fermer</button></div><video src="'+esc(url)+'" controls playsinline autoplay muted loop></video></div></div>';
   host.querySelector("#vclose").onclick=function(){host.innerHTML=""};host.querySelector(".scrim").onclick=function(ev){if(ev.target===this)host.innerHTML=""}});
 function videosHtml(){var l=ciAll("video").slice().sort(function(a,b){return (a.data.nom||"").localeCompare(b.data.nom||"","fr")});
   return '<section><h2 class="sec">Mes vidéos de démo</h2><div class="notice" style="margin-bottom:8px">Filme-toi 10 à 20 secondes sur un exercice : la vidéo remplace la recherche YouTube chez tous tes adhérents, dès que l\'exercice a exactement le même nom.</div><button class="btn block" data-vadd="1">🎬 Ajouter une vidéo</button><div class="panel" style="margin-top:8px">'+(l.length?l.map(function(v){return '<div class="row"><button class="grow plain" data-vid="'+esc(v.data.path)+'" data-vn="'+esc(v.data.nom)+'"><div class="t">▶ '+esc(v.data.nom)+'</div></button><button class="btn sm ghost" data-vdel="'+v.id+'" aria-label="Supprimer">✕</button></div>'}).join(""):'<div class="empty">Aucune vidéo pour l\'instant.</div>')+'</div></section>'}
-document.addEventListener("click",function(e){if(!prof||prof.role!=="coach")return;var t;
+document.addEventListener("click",function(e){if(!prof||!isCoachUI())return;var t;
   if(e.target.closest("[data-vadd]")){buildLibN();openSheet("Ajouter une vidéo de démo",'<div class="f"><label for="vd_n">Exercice (même nom que dans tes programmes)</label><input id="vd_n" list="exoLib" autocomplete="off" placeholder="Squat goblet"></div><label class="btn block" for="vd_f" id="vd_l">🎬 Choisir la vidéo</label><input id="vd_f" type="file" accept="video/*" hidden><div class="notice">50 Mo maximum : une vidéo courte (10 à 20 s) suffit.</div><button class="btn primary" id="vd_ok">Enregistrer</button>',function(b){var file=null;
     b.querySelector("#vd_f").onchange=function(){file=this.files[0];if(file)b.querySelector("#vd_l").textContent="🎬 "+file.name+" ("+Math.round(file.size/1e6)+" Mo)"};
     b.querySelector("#vd_ok").onclick=function(){var nom=b.querySelector("#vd_n").value.trim(),btn=this;if(!nom||!file){toast("Indique l'exercice et choisis une vidéo");return}if(file.size>50e6){toast("Vidéo trop lourde (50 Mo max) : coupe-la ou filme plus court");return}
@@ -1551,7 +1551,7 @@ function slotsCoachHtml(){var l=ciAll("slot").filter(function(s){return s.data.d
    (req.length?'<div class="panel">'+req.map(function(r){var ct=contactOfProfile(r.m.client_id);return '<div class="row"><div class="grow"><div class="t">'+esc(ct?ct.data.nom:"Client")+' veut réserver</div><div class="s">'+esc(slotLabel(r.s.data))+'</div></div><button class="btn sm primary" data-okslot="'+r.s.id+'" data-who="'+r.m.client_id+'">Confirmer</button></div>'}).join("")+'</div>':'')+
    '<div class="panel">'+(l.length?l.map(function(s){return '<button class="row tap" data-eslot="'+s.id+'"><div class="grow"><div class="t">'+esc(slotLabel(s.data))+'</div><div class="s">'+(s.data.pris?'Réservé par '+esc(cnom(s.data.cid)):'Libre')+'</div></div><span class="chip '+(s.data.pris?'ok':'mute')+'">'+(s.data.pris?'Réservé':'Libre')+'</span></button>'}).join(""):'<div class="empty">Ouvre des créneaux : tes adhérents les réservent depuis leur appli.</div>')+'</div></section>'}
 document.addEventListener("click",function(e){if(!prof)return;var t;
-  if(prof.role!=="coach"){if(e.target.closest('[data-goc="slots"]'))openSlots();return}
+  if(!isCoachUI()){if(e.target.closest('[data-goc="slots"]'))openSlots();return}
   if(e.target.closest("[data-nslot]"))editSlot();
   else if((t=e.target.closest("[data-eslot]")))editSlot(ciGet(t.dataset.eslot));
   else if((t=e.target.closest("[data-okslot]"))){var s=ciGet(t.dataset.okslot),pid=t.dataset.who,ct=contactOfProfile(pid);if(!ct)return;t.disabled=true;
@@ -1566,7 +1566,7 @@ function openLibre(){var r=6;openSheet("Séance libre",'<div class="notice">Une 
     sb.from("seances_faites").insert(row).select().single().then(function(x){if(x.error&&row.details){delete row.details;return sb.from("seances_faites").insert(row).select().single()}return x}).then(function(x){if(x.error){btn.disabled=false;return err(x.error)}D.libres.push(x.data);closeSheet();toast("Séance libre enregistrée 💪");render();notify(first(prof.nom)+" a fait une séance libre",row.seance_nom+" · intensité "+r+"/10",["running"])})}})}
 function libresCard(){var since=new Date();since.setDate(since.getDate()-((since.getDay()+6)%7));var wk=ymd(since),l=(D.libres||[]).filter(function(x){return (x.done_at||"").slice(0,10)>=wk}),min=l.reduce(function(s,x){return s+((x.details&&x.details.libre&&x.details.libre.duree)||0)},0);
   return '<div class="panel pad" style="display:flex;align-items:center;gap:12px"><div class="grow"><b>🏃 Séances libres</b><div class="notice">'+(l.length?l.length+' cette semaine'+(min?' · '+min+' min':''):'Marche, vélo, pole, yoga… note tout ce que tu fais en plus !')+'</div></div><button class="btn sm" data-goc="libre">+ Ajouter</button></div>'}
-document.addEventListener("click",function(e){if(prof&&prof.role!=="coach"&&e.target.closest('[data-goc="libre"]'))openLibre()});
+document.addEventListener("click",function(e){if(prof&&!isCoachUI()&&e.target.closest('[data-goc="libre"]'))openLibre()});
 
 /* ---------- reçus / factures ---------- */
 function openRecu(m){var st=settings(),d=m.data,c=d.cid?ciGet(d.cid):null;
@@ -1662,7 +1662,7 @@ function openVmaTest(){openSheet("Test VMA · demi-Cooper",'<ol class="rules"><l
   b.querySelector("#vt_m").oninput=function(){var m=num(this.value);b.querySelector("#vt_r").innerHTML=m?'<div class="res"><div class="k">Ta VMA</div><div class="big">'+fnum(m/100)+' km/h</div></div>':''};
   b.querySelector("#vt_ok").onclick=function(){var v=num(b.querySelector("#vt_m").value)/100;if(!v)return;var btn=this;btn.disabled=true;var d=Object.assign({},(D.fiche&&D.fiche.data)||{},{vma:v});
     sb.from("fiches").upsert({client_id:me.id,data:d,updated_at:new Date().toISOString()}).select().single().then(function(x){if(x.error){btn.disabled=false;return err(x.error)}D.fiche=x.data;closeSheet();toast("VMA enregistrée : tes allures sont à jour");render();notify(first(prof.nom)+" a fait son test VMA","VMA : "+fnum(v)+" km/h",["stopwatch"])})}})}
-document.addEventListener("click",function(e){if(!prof||prof.role==="coach")return;var t;
+document.addEventListener("click",function(e){if(!prof||isCoachUI())return;var t;
   if((t=e.target.closest("[data-runlog]")))openRunLog(t.dataset.runlog);else if((t=e.target.closest("[data-rwk]"))){runWk=+t.dataset.rwk;render()}else if(e.target.closest("[data-vmatest]"))openVmaTest()});
 
 /* ---------- côté coach ---------- */
@@ -1685,7 +1685,7 @@ function editRun(c){var pl=runPlanOf(CI,c.client_id);if(!pl)return;var p=JSON.pa
     function sync(){box.querySelectorAll("[data-rf]").forEach(function(el){var s=p.weeks[cw].seances[+el.dataset.j];s[el.dataset.rf]=el.dataset.rf==="duree"?(parseInt(el.value,10)||""):el.value})}
     box.addEventListener("click",function(e){var t=e.target.closest("button");if(!t)return;sync();var d=t.dataset;if(d.rw!=null)cw=+d.rw;else if(d.rwa){p.weeks.push(JSON.parse(JSON.stringify(p.weeks[p.weeks.length-1])));cw=p.weeks.length-1}else if(d.rsr!=null)p.weeks[cw].seances.splice(+d.rsr,1);else if(d.rsa)p.weeks[cw].seances.push(R("Footing","ef",30,"30 min en endurance."));else return;box.innerHTML=wh()});
     b.querySelector("#re_ok").onclick=function(){sync();p.titre=b.querySelector("#re_t").value.trim()||p.titre;p.debut=b.querySelector("#re_d").value||p.debut;p.vma=num(b.querySelector("#re_v").value)||"";pl.data=p;this.disabled=true;ciSave(pl).then(function(){closeSheet();toast("Plan mis à jour");render()})}})}
-document.addEventListener("click",function(e){if(!prof||prof.role!=="coach")return;var c=ciGet(C.selC);if(!c)return;if(e.target.closest("[data-rassign]"))assignRun(c);else if(e.target.closest("[data-redit]"))editRun(c)});
+document.addEventListener("click",function(e){if(!prof||!isCoachUI())return;var c=ciGet(C.selC);if(!c)return;if(e.target.closest("[data-rassign]"))assignRun(c);else if(e.target.closest("[data-redit]"))editRun(c)});
 
 /* =====================================================
    FORMATS CHRONOMÉTRÉS : EMOM, AMRAP, Tabata, Circuit
@@ -1776,7 +1776,7 @@ var PROG_LIB=[
 ];
 function libHtml(){var have={};ciAll("tpl").forEach(function(t){if(t.data.lib)have[t.data.lib]=1});
   return '<section><h2 class="sec">📚 Programmes prêts à l\'emploi</h2><div class="notice" style="margin-bottom:8px">Construits pour toi, avec échauffements, progression semaine par semaine, supersets, formats chronométrés et charges en % / RIR. Ajoute-les à tes modèles, adapte si besoin, puis assigne-les.</div><div class="notice" style="margin-bottom:8px">🏃 <b>Plans de course</b> (débuter, 5 km, 10 km, <b>marathon</b>, entretien) : ils s\'envoient depuis la fiche de l\'adhérent › onglet <b>Course</b> › <b>+ Donner un plan de course</b>.</div><div class="panel">'+PROG_LIB.map(function(p){var w=p.gen(),n=0,e=0;w.forEach(function(x){x.seances.forEach(function(s){n++;e+=s.exos.length})});return '<div class="row" style="align-items:flex-start"><div class="grow" style="min-width:0"><div class="t" style="white-space:normal">'+esc(p.titre)+'</div><div class="s" style="white-space:normal">'+esc(p.niveau)+' · '+w[0].seances.length+' séances / semaine · '+e+' exercices au total</div><div class="s" style="white-space:normal;margin-top:2px">'+esc(p.objectif)+'</div></div>'+(have[p.id]?'<span class="chip ok">Ajouté</span>':'<button class="btn sm primary" data-libadd="'+p.id+'">Ajouter</button>')+'</div>'}).join("")+'</div></section>'}
-document.addEventListener("click",function(e){var t=e.target.closest("[data-libadd]");if(!t||!prof||prof.role!=="coach")return;var p=PROG_LIB.filter(function(x){return x.id===t.dataset.libadd})[0];t.disabled=true;
+document.addEventListener("click",function(e){var t=e.target.closest("[data-libadd]");if(!t||!prof||!isCoachUI())return;var p=PROG_LIB.filter(function(x){return x.id===t.dataset.libadd})[0];t.disabled=true;
   ciSave({kind:"tpl",data:{titre:p.titre,objectif:p.objectif,consignes:p.consignes,weeks:p.gen(),lib:p.id}}).then(function(){toast("« "+p.titre+" » ajouté à tes modèles");render()})});
 
 /* ---------- programme CrossFit RX + course ---------- */
@@ -2007,7 +2007,7 @@ function openSurprise(){var o=JSON.parse(JSON.stringify(SPC)),cur=null;
       b.querySelector("#sp_re").onclick=gen;b.querySelector("#sp_start").onclick=function(){var s=cur;closeSheet();setTimeout(function(){startSession(-1,s)},250)};
       setTimeout(function(){var a=b.querySelector("#sp_out");a&&a.scrollIntoView({behavior:"smooth",block:"start"})},50)}
     b.querySelector("#sp_go").onclick=gen})}
-document.addEventListener("click",function(e){if(e.target.closest("[data-surp]")&&prof&&prof.role!=="coach")openSurprise()});
+document.addEventListener("click",function(e){if(e.target.closest("[data-surp]")&&prof&&!isCoachUI())openSurprise()});
 function saveSurprise(s,det){var r=7;openSheet("Séance surprise bouclée 🎉",'<div class="f"><label>Ressenti</label><div class="notice">1 = très facile · 10 = à fond</div><div class="scale" id="ss_r">'+[1,2,3,4,5,6,7,8,9,10].map(function(n){return '<button data-r="'+n+'" aria-pressed="'+(n===r)+'">'+n+'</button>'}).join("")+'</div></div><button class="btn primary" id="ss_ok">Valider</button>',function(b){
   b.querySelector("#ss_r").onclick=function(e){var t=e.target.closest("[data-r]");if(!t)return;r=+t.dataset.r;b.querySelectorAll("#ss_r [data-r]").forEach(function(x){x.setAttribute("aria-pressed",String(+x.dataset.r===r))})};
   b.querySelector("#ss_ok").onclick=function(){var btn=this;btn.disabled=true;var du=parseInt((s.nom.match(/(\d+) min/)||[])[1],10)||20,d=Object.assign({libre:{type:"Séance surprise",duree:du},surprise:true},det||{});
@@ -2087,7 +2087,7 @@ function openBot(){if(!CHAT.length)CHAT.push({me:false,t:"Salut "+pr1()+" 👋 J
       var a=e.target.closest("[data-bact]");if(a){closeSheet();setTimeout(function(){a.dataset.bact==="surp"?openSurprise():openDispo()},250)}};
     draw()})}
 function botCard(){return '<button class="panel pad rowcard" data-bot="1" style="font:inherit;color:inherit;cursor:pointer"><span style="font-size:30px">💬</span><span class="grow"><b>Une question ?</b><br><span class="notice">Remplacer un exo, nutrition, charges… réponse immédiate</span></span><span class="chip">Demander</span></button>'}
-document.addEventListener("click",function(e){if(e.target.closest("[data-bot]")&&prof&&prof.role!=="coach")openBot()});
+document.addEventListener("click",function(e){if(e.target.closest("[data-bot]")&&prof&&!isCoachUI())openBot()});
 
 /* ---------- 3. Défis collectifs ---------- */
 var DEFI_U=[["reps","répétitions"],["km","km"],["seances","séances"],["min","minutes"],["pas","pas"],["kg","kg soulevés"]];
@@ -2104,7 +2104,7 @@ function defiBlock(d,asCoach){var x=d.data,a=defiAgg(d.id),pct=x.objectif?Math.m
    '<div style="display:flex;align-items:baseline;gap:6px;margin-top:10px"><b style="font-family:var(--display);font-size:30px">'+fnum(a.tot)+'</b><span>/ '+fnum(x.objectif)+' '+uLab(x.unite)+' tous ensemble</span></div><div class="bar"><i style="width:'+pct+'%"></i></div>'+(pct>=100?'<div style="font-weight:700;margin-top:6px">🎉 Objectif collectif atteint !</div>':'')+
    (asCoach?'':'<div style="margin-top:6px">Ta contribution : <b>'+fnum(mine)+' '+uLab(x.unite)+'</b></div>')+(x.classement!==false?podiumHtml(a.rk,asCoach?null:me.id):'')+
    (asCoach?'<div style="display:flex;gap:8px;margin-top:10px"><button class="btn sm" data-defed="'+d.id+'">Modifier</button><button class="btn sm" data-defdel="'+d.id+'">Supprimer</button></div>':(fin>=0?'<button class="btn block" style="margin-top:10px" data-defadd="'+d.id+'">+ J\'ajoute ma part</button>':''))+'</div>'}
-function defisCardClient(){var L=defisList(D.ci);if(!L.length||DP.ok===false)return "";if(DP.ok===null){loadDefiPts(L.map(function(d){return d.id}),function(){if(prof&&prof.role!=="coach"&&tab==="seances")render()});return ""}return '<section style="display:flex;flex-direction:column;gap:10px">'+L.map(function(d){return defiBlock(d,false)}).join("")+'</section>'}
+function defisCardClient(){var L=defisList(D.ci);if(!L.length||DP.ok===false)return "";if(DP.ok===null){loadDefiPts(L.map(function(d){return d.id}),function(){if(prof&&!isCoachUI()&&tab==="seances")render()});return ""}return '<section style="display:flex;flex-direction:column;gap:10px">'+L.map(function(d){return defiBlock(d,false)}).join("")+'</section>'}
 function addDefi(id){var d=(D.ci||[]).filter(function(i){return i.id===id})[0];if(!d)return;var x=d.data,q={reps:[10,25,50,100],km:[1,3,5,10],seances:[1],min:[10,20,30,60],pas:[2000,5000,8000,10000],kg:[100,500,1000]}[x.unite]||[1,5,10];
   openSheet(x.emoji+" "+x.titre,'<div class="f"><label for="df_v">Combien ? ('+uLab(x.unite)+')</label><input id="df_v" inputmode="decimal" placeholder="'+q[0]+'"></div><div class="chips" id="df_q">'+q.map(function(v){return '<button type="button" data-v="'+v+'">+'+fnum(v)+'</button>'}).join("")+'</div><button class="btn primary" id="df_ok">Ajouter</button>',function(b){
     b.querySelector("#df_q").onclick=function(e){var t=e.target.closest("[data-v]");if(t)b.querySelector("#df_v").value=t.dataset.v};
@@ -2134,7 +2134,7 @@ function ficheFor(cid){if(typeof D!=="undefined"&&D.fiche&&me&&cid===me.id)retur
 function dispoOf(cid){var f=ficheFor(cid),v=f&&f.data&&f.data.periodes;return Array.isArray(v)?v.filter(function(x){return x&&x.du&&x.au&&DISPO_T[x.type]}):[]}
 function dispoNow(cid,day){day=day||ymd();return dispoOf(cid).filter(function(x){return x.du<=day&&x.au>=day})[0]||null}
 function pauseDays(p){if(!p||!p.client_id)return 0;var t=ymd(),n=0;dispoOf(p.client_id).forEach(function(x){if(x.type!=="pause")return;var a=x.du>p.debut?x.du:p.debut,b=x.au<t?x.au:t;if(b>=a)n+=Math.round((pd(b)-pd(a))/864e5)+1});return n}
-function adaptS(s,wk){if(!s||!D.prog||me==null||prof.role==="coach")return s;var cw=curWeek(D.prog);if(wk!==cw)return s;var dn=dispoNow(me.id);if(!dn||dn.type==="pause")return s;
+function adaptS(s,wk){if(!s||!D.prog||me==null||isCoachUI())return s;var cw=curWeek(D.prog);if(wk!==cw)return s;var dn=dispoNow(me.id);if(!dn||dn.type==="pause")return s;
   var c=JSON.parse(JSON.stringify(s));
   if(dn.type==="charge"){c.nom=(c.nom||"Séance")+" · express";c.echauffement="⚡ Version express (semaine chargée) : échauffement 5 min. "+(c.echauffement||"");
     c.exos.forEach(function(x,j){if(fmtOf(c.exos,j)){if(x.fmt){if(x.fmtMin)x.fmtMin=Math.max(4,Math.round(+x.fmtMin*0.7));if(x.fmtTours&&x.fmt==="circuit")x.fmtTours=Math.max(2,+x.fmtTours-1)}}else{var n=parseInt(x.series,10);if(n>1)x.series=String(Math.max(2,Math.round(n*0.66)))}})}
@@ -2152,7 +2152,7 @@ function openDispo(){var L=dispoOf(me.id).slice().sort(function(a,b){return a.du
     b.querySelector("#dp_ok").onclick=function(){var du=b.querySelector("#dp_du").value,au=b.querySelector("#dp_au").value;if(!du||!au||au<du)return toast("Vérifie les dates");this.disabled=true;var it={id:rndCode(),type:ty,du:du,au:au,note:b.querySelector("#dp_n").value.trim()};
       save(L.concat([it]),"C'est noté, ton programme s'adapte 👌",DISPO_T[ty].i+" "+DISPO_T[ty].l+" du "+fdate(du)+" au "+fdate(au)+(it.note?" ("+it.note+")":""))};
     b.addEventListener("click",function(e){var t=e.target.closest("[data-dpdel]");if(t)save(L.filter(function(x){return x.id!==t.dataset.dpdel}),"Période retirée")})})}
-document.addEventListener("click",function(e){var t=e.target.closest("[data-goc2]");if(t&&prof&&prof.role!=="coach")openDispo()});
+document.addEventListener("click",function(e){var t=e.target.closest("[data-goc2]");if(t&&prof&&!isCoachUI())openDispo()});
 
 /* ---------- Séance en duo (temps réel via Supabase Realtime) ---------- */
 var DUO=null;
@@ -2183,7 +2183,7 @@ function openDuo(){var host=document.createElement("div");host.className="scrim"
   document.body.appendChild(host);function close(){host.remove()}host.querySelector("#du_x").onclick=close;host.onclick=function(e){if(e.target===host)close()};
   host.querySelector("#du_new").onclick=function(){close();duoJoin(rndCode().slice(0,4));setTimeout(duoShare,300)};
   host.querySelector("#du_join").onclick=function(){var v=host.querySelector("#du_c").value;close();duoJoin(v)}}
-document.addEventListener("click",function(e){if(!prof||prof.role==="coach")return;if(e.target.closest("[data-duo]"))openDuo();else if(e.target.closest("[data-duox]"))duoLeave();else if(e.target.closest("[data-duosh]"))duoShare();else if(e.target.closest("[data-duoc]")){duoSend(Object.assign({type:"cheer"},duoState()));toast("Encouragement envoyé 🔥")}});
+document.addEventListener("click",function(e){if(!prof||isCoachUI())return;if(e.target.closest("[data-duo]"))openDuo();else if(e.target.closest("[data-duox]"))duoLeave();else if(e.target.closest("[data-duosh]"))duoShare();else if(e.target.closest("[data-duoc]")){duoSend(Object.assign({type:"cheer"},duoState()));toast("Encouragement envoyé 🔥")}});
 
 /* garde-fous : une nouveauté ne doit jamais bloquer l'appli */
 function guardFn(f,fb){return function(){try{return f.apply(this,arguments)}catch(e){console.error(e);return typeof fb==="function"?fb.apply(this,arguments):fb}}}
@@ -2191,7 +2191,7 @@ lvlCard=guardFn(lvlCard,"");dispoBanner=guardFn(dispoBanner,"");defisCardClient=
 adaptS=guardFn(adaptS,function(s){return s});pauseDays=guardFn(pauseDays,0);dispoOf=guardFn(dispoOf,function(){return []});checkLevelUp=guardFn(checkLevelUp,null);
 
 /* ---------- mises à jour automatiques + Quoi de neuf ---------- */
-var APP_V="2026-10-26.2";
+var APP_V="2026-10-26.3";
 var NEWS=[{v:"2026-10-26",t:"Séance en duo 👯",i:["Fais ta séance en même temps qu'un·e ami·e, chacun sur son téléphone, même à distance","Vous voyez la progression de l'autre en direct, le coach vocal annonce ses séries","Bouton 🔥 pour encourager ton binôme, et +30 XP par séance en duo"]},
  {v:"2026-10-24.3",t:"Assistant, défis et calendrier",i:["💬 Assistant M Studio : réponses immédiates (remplacer un exo, nutrition, charges, prochaine séance…), et transmission à ta coach si besoin","🏆 Défis collectifs entre adhérents avec barre commune et podium","📅 Mon calendrier : semaine chargée = version express, vacances = poids du corps, pause = programme décalé"]},
  {v:"2026-10-24.2",t:"5 nouveautés waouh",i:["🔊 Coach vocal pendant les séances et les minuteurs (activable / désactivable)","👑 Niveaux, XP et 24 badges à débloquer","🎁 Ton récap du mois façon story, à partager sur Insta","▶️ Ton évolution photo en animation, et en vidéo à partager","🎲 Séance surprise : choisis ton temps, ton matériel et ton énergie, l'appli crée ta séance"]},
