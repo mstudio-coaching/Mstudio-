@@ -270,7 +270,7 @@ details.cons summary{font-weight:700;cursor:pointer}
 <script>
 (function(){
 var CFG=window.MSTUDIO||{}, sb=null, me=null, prof=null, tab=null;
-var D={prog:null,done:[],mesures:[],photos:[]};      // client data
+var D={prog:null,done:[],mesures:[],photos:[]};var SELF=false;      // client data
 var C={clients:[],invs:[],sel:null,selTab:"prog",act:null}; // coach data
 var weekSel=null, urlCache={};
 var $=function(id){return document.getElementById(id)};
@@ -388,7 +388,7 @@ function newPassword(){
   });
 }
 
-function render(){ if(!prof)return; try{if(prof.role==="coach")renderCoach(); else renderClient();}catch(e){showErr(e)} }
+function render(){ if(!prof)return; try{if(prof.role==="coach"&&!SELF)renderCoach(); else renderClient();}catch(e){showErr(e)} }
 var ERRSEEN={};function showErr(e){try{console.error(e);var k=String(e&&e.message||e);if(ERRSEEN[k])return;ERRSEEN[k]=1;var d=document.getElementById("errbar");if(!d){d=document.createElement("div");d.id="errbar";d.style.cssText="position:fixed;left:8px;right:8px;bottom:calc(env(safe-area-inset-bottom) + 76px);z-index:9998;background:#B4434A;color:#fff;padding:10px 12px;border-radius:12px;font:600 12px system-ui;white-space:pre-wrap";d.onclick=function(){d.remove()};document.body.appendChild(d)}var st=String(e&&e.stack||"").split("\n").slice(0,3).join(" | ");d.textContent="⚠️ Bug : "+(e&&e.message||e)+(st?"\n"+st:"")+"\n(Fais une capture pour Claude, touche pour fermer)"}catch(x){}}
 window.addEventListener("error",function(ev){showErr(ev.error||ev.message)});window.addEventListener("unhandledrejection",function(ev){var r=ev.reason;if(r&&r.message)showErr(r)});
 
@@ -408,11 +408,11 @@ function loadClient(){
 }
 function renderClient(){
   var un=(D.msgs||[]).filter(function(m){return m.from_coach&&!m.lu}).length,tl=[["seances","Séances"],["suivi","Progrès"],["nutrition","Nutrition"]];if(runPlanOf(D.ci)||runLogs(D.libres).length)tl.push(["course","Course"]);
-  if(D.msgOk)tl.push(["messages","Messages"+(un?'<b class="badge">'+un+'</b>':'')]);tl.push(["profil","Profil"]);
+  if(D.msgOk&&!SELF)tl.push(["messages","Messages"+(un?'<b class="badge">'+un+'</b>':'')]);tl.push(["profil","Profil"]);
   if(tab!=="messages")setPoll(null);
   setTabs(tl);
   $("sub").textContent={seances:"MES SÉANCES",suivi:"MES PROGRÈS",photos:"MES PHOTOS",nutrition:"MA NUTRITION",course:"MA COURSE À PIED",messages:"MA COACH",profil:"MON PROFIL"}[tab];
-  $("hdrRight").innerHTML="";
+  $("hdrRight").innerHTML=SELF?'<button class="btn sm" id="selfout">↩ Espace coach</button>':"";if(SELF){$("sub").textContent="MON ENTRAÎNEMENT";$("selfout").onclick=function(){SELF=false;tab="accueil";setPoll(null);render();window.scrollTo(0,0)}}
   $("view").innerHTML=({seances:function(){var h=vSeances();var i=h.indexOf("</p>")+4;return h.slice(0,i)+seancesExtras()+h.slice(i)},suivi:vProgres,photos:vPhotos,nutrition:vNutri,course:vCourse,messages:vMsgsClient,profil:vProfil})[tab]();
   if(tab==="photos")hydratePhotos(D.photos);
 }
@@ -427,7 +427,7 @@ function exoHtml(x,i,lb){lb=lb||{lab:String(i+1).padStart(2,"0")};
 function vSeances(){
   var p=D.prog,hr=new Date().getHours();
   var html='<p class="hello">'+(hr<18?"Salut":"Bonsoir")+' <span>'+esc(first(prof.nom))+'</span></p>';
-  if(!p) return html+'<div class="panel"><div class="empty">Ta coach prépare ton programme. Il apparaîtra ici dès qu\'il sera prêt.</div></div>';
+  if(!p) return html+(SELF?'<div class="panel pad"><b>Pas encore de programme pour toi</b><div class="notice" style="margin-top:6px">Retourne dans l\'espace coach › Programmes › Mes modèles › <b>Assigner</b>, et choisis « Moi » dans la liste.</div></div>':'<div class="panel"><div class="empty">Ta coach prépare ton programme. Il apparaîtra ici dès qu\'il sera prêt.</div></div>');
   var ws=weeksOf(p),cw=curWeek(p);if(weekSel==null||weekSel>=ws.length)weekSel=cw;
   var w=ws[weekSel]||{seances:[]},ss=w.seances||[];
   var nDone=ss.filter(function(s,i){return doneFor(weekSel,i)}).length;
@@ -557,7 +557,7 @@ function vProfil(){
   setTimeout(function(){$("lo").onclick=function(){sb.auth.signOut()}},0);
   return clientRdvHtml()+(runPlanOf(D.ci)||runLogs(D.libres).length?'':'<button class="btn block" data-runlog="libre">🏃 Noter une sortie course à pied</button>')+reussitesHtml()+'<button class="btn block" data-goc="tools">🧮 Calculateurs : 1RM, %, RIR, zones cardio</button>'+'<div class="panel"><div class="row"><div class="avatar">'+esc(initials(prof.nom))+'</div><div class="grow"><div class="t">'+esc(prof.nom)+'</div><div class="s">'+esc(prof.email||me.email||"")+'</div></div></div></div>'+
    '<div class="panel pad"><b>Installer l\'appli</b><p class="notice" style="margin:6px 0 0">Dans Safari : bouton Partager, puis « Sur l\'écran d\'accueil ». L\'appli s\'ouvre ensuite en plein écran comme une vraie appli.</p></div>'+
-   (!D.ficheOk?'<div class="panel"><div class="row"><div class="grow"><div class="t">Ma fiche santé</div><div class="s" style="white-space:normal">Pas encore activée sur l\'appli : ta coach finalise l\'installation.</div></div></div></div>':'')+(D.ficheOk?'<div class="panel"><div class="row"><div class="grow"><div class="t">Ma fiche santé</div><div class="s">'+(D.fiche?'Mise à jour le '+fdate(D.fiche.updated_at):'Pas encore remplie')+'</div></div><button class="btn sm '+(D.fiche?'':'primary')+'" data-goc="fiche">'+(D.fiche?'Modifier':'Remplir')+'</button></div></div>':'')+
+   (SELF?'':!D.ficheOk?'<div class="panel"><div class="row"><div class="grow"><div class="t">Ma fiche santé</div><div class="s" style="white-space:normal">Pas encore activée sur l\'appli : ta coach finalise l\'installation.</div></div></div></div>':'')+(!SELF&&D.ficheOk?'<div class="panel"><div class="row"><div class="grow"><div class="t">Ma fiche santé</div><div class="s">'+(D.fiche?'Mise à jour le '+fdate(D.fiche.updated_at):'Pas encore remplie')+'</div></div><button class="btn sm '+(D.fiche?'':'primary')+'" data-goc="fiche">'+(D.fiche?'Modifier':'Remplir')+'</button></div></div>':'')+
    '<button class="btn ghost block" id="lo">Se déconnecter</button>';
 }
 
@@ -575,7 +575,7 @@ function loadCoach(){
     C.clients=r[0].data||[];C.invs=r[1].data||[];C.feed={sf:r[2].data||[],m:r[3].data||[],ph:r[4].data||[]};render();return coachExtras()}).then(function(){return ciLoad()}).then(syncContacts).then(function(){render();
   }).catch(function(e){if(C.ciOk==null)C.ciOk=false;C.ciErr=C.ciErr||String(e&&e.message||e);try{render()}catch(x){showErr(x)}err(e)});
 }
-function cName(id){var c=C.clients.filter(function(x){return x.id===id})[0];return c?c.nom:"Client"}
+function cName(id){if(me&&id===me.id)return "Moi";var c=C.clients.filter(function(x){return x.id===id})[0];return c?c.nom:"Client"}
 function renderCoachOld(){
   setTabs([["activite","Activité"],["clients","Clients"],["invit","Inviter"]]);
   $("hdrRight").innerHTML='<button class="btn sm ghost" id="lo2">Déconnexion</button>';$("lo2").onclick=function(){sb.auth.signOut()};
@@ -794,7 +794,7 @@ function seancesExtras(){
   var ex=lvlCard()+dispoBanner()+defisCardClient()+surpriseCard()+botCard()+wrapCard()+clientRdvHtml()+slotsCard()+habitsCard()+libresCard(),p=D.prog;
   var unread=(D.msgs||[]).filter(function(m){return m.from_coach&&!m.lu}).length;
   if(unread)ex+='<button class="panel pad alert tap-panel" data-goc="messages"><b>💬 '+unread+' nouveau'+(unread>1?'x':'')+' message'+(unread>1?'s':'')+' de ta coach</b><span class="notice">Appuie pour lire</span></button>';
-  if(D.ficheOk&&!D.fiche)ex+='<div class="panel pad alert"><b>Remplis ta fiche santé</b><div class="notice" style="margin:4px 0 10px">2 minutes pour que ta coach adapte ton programme en toute sécurité.</div><button class="btn primary block" data-goc="fiche">Remplir ma fiche</button></div>';
+  if(!SELF&&D.ficheOk&&!D.fiche)ex+='<div class="panel pad alert"><b>Remplis ta fiche santé</b><div class="notice" style="margin:4px 0 10px">2 minutes pour que ta coach adapte ton programme en toute sécurité.</div><button class="btn primary block" data-goc="fiche">Remplir ma fiche</button></div>';
   if(p){var cw=curWeek(p),ss=(weeksOf(p)[cw]||{seances:[]}).seances||[],nd=ss.filter(function(s,i){return doneFor(cw,i)}).length,st=streak(),pct=ss.length?Math.round(nd/ss.length*100):0;
     ex+='<div class="panel pad"><div style="display:flex;align-items:baseline;gap:8px"><span class="k">Cette semaine</span><span class="grow"></span>'+(st?'<span class="chip ok">🔥 '+st+' semaine'+(st>1?'s':'')+' complète'+(st>1?'s':'')+' d\'affilée</span>':'')+'</div><div style="display:flex;align-items:baseline;gap:8px;margin-top:4px"><span class="big">'+nd+' / '+ss.length+'</span><span class="notice">séances faites</span></div><div class="bar"><i style="width:'+pct+'%"></i></div>'+(pct===100?'<div class="notice" style="margin-top:6px;color:var(--ok);font-weight:700">Semaine bouclée, bravo 💪</div>':'')+'</div>';}
   var lc=lastCheck(D.checks);if(D.checkOk&&(!lc||daysSince(lc.created_at)>=6))ex+='<div class="panel pad" style="display:flex;align-items:center;gap:12px"><div class="grow"><b>📝 Bilan de la semaine</b><div class="notice">Sommeil, énergie, stress… 1 minute</div></div><button class="btn sm primary" data-goc="checkin">Faire</button></div>';
@@ -1397,15 +1397,16 @@ function vProgsN(){if(!C.ciOk)return migrNotice();var l=ciAll("tpl").slice().sor
 document.addEventListener("click",function(e){if(!prof||prof.role!=="coach")return;var t;
   if(e.target.closest("[data-ntpl]"))editProgram({},{title:"Nouveau modèle",onSave:function(p){return ciSave({kind:"tpl",data:{titre:p.titre,objectif:p.objectif,consignes:p.consignes,weeks:p.weeks}})}});
   else if((t=e.target.closest("[data-etpl]"))){var it=ciGet(t.dataset.etpl);editProgram(it.data,{title:"Modifier le modèle",onSave:function(p){it.data={titre:p.titre,objectif:p.objectif,consignes:p.consignes,weeks:p.weeks};return ciSave(it)},onDel:function(){return ciDel(it.id)}})}
-  else if((t=e.target.closest("[data-atpl]"))){var tp=ciGet(t.dataset.atpl),regs=contacts().filter(function(c){return c.client_id});if(!regs.length){toast("Aucun client inscrit sur l'appli pour l'instant.");return}
-    openSheet("Assigner « "+(tp.data.titre||"modèle")+" »",'<div class="f"><label for="as_c">Client</label><select id="as_c">'+regs.map(function(c){return '<option value="'+c.client_id+'">'+esc(c.data.nom)+'</option>'}).join("")+'</select></div><div class="f"><label for="as_d">Début (semaine 1)</label><input id="as_d" type="date" value="'+ymd()+'"></div><div class="notice">Tu pourras ensuite l\'adapter dans sa fiche, onglet Programme.</div><button class="btn primary" id="as_ok">Envoyer dans son appli</button>',function(b){b.querySelector("#as_ok").onclick=function(){this.disabled=true;var pid=b.querySelector("#as_c").value;saveProgFor(pid,Object.assign({},tp.data,{debut:b.querySelector("#as_d").value})).then(function(){closeSheet();render()})}})}});
+  else if((t=e.target.closest("[data-atpl]"))){var tp=ciGet(t.dataset.atpl),regs=contacts().filter(function(c){return c.client_id});
+    openSheet("Assigner « "+(tp.data.titre||"modèle")+" »",'<div class="f"><label for="as_c">Client</label><select id="as_c"><option value="'+me.id+'">Moi ('+esc(first(prof.nom||"coach"))+') · Mon entraînement</option>'+regs.map(function(c){return '<option value="'+c.client_id+'">'+esc(c.data.nom)+'</option>'}).join("")+'</select></div><div class="f"><label for="as_d">Début (semaine 1)</label><input id="as_d" type="date" value="'+ymd()+'"></div><div class="notice">Tu pourras ensuite l\'adapter dans sa fiche, onglet Programme.</div><button class="btn primary" id="as_ok">Envoyer dans son appli</button>',function(b){b.querySelector("#as_ok").onclick=function(){this.disabled=true;var pid=b.querySelector("#as_c").value;saveProgFor(pid,Object.assign({},tp.data,{debut:b.querySelector("#as_d").value})).then(function(){closeSheet();render()})}})}});
 
+document.addEventListener("click",function(e){if(!prof||prof.role!=="coach"||!e.target.closest("[data-self]"))return;SELF=true;tab="seances";D={prog:null,done:[],mesures:[],photos:[]};weekSel=null;window.scrollTo(0,0);$("view").innerHTML='<div class="notice" style="text-align:center;padding:16px">Chargement de ton entraînement…</div>';loadClient()});
 /* ---------- accueil ---------- */
 function vAccueil(){var base=vFeed();if(C.ciOk==null)return '<div class="notice" style="text-align:center;padding:6px">Chargement de ton espace…</div>'+base;if(!C.ciOk)return migrNotice()+base;
   var today=ymd(),evs=ciAll("evt").filter(function(e){return e.data.date>=today&&!e.data.fait&&(e.data.type==="presentiel"||e.data.type==="distanciel"||e.data.type==="stage")}).sort(evSort).slice(0,5),dues=ciAll("evt").filter(function(e){return (e.data.type==="prog"||e.data.type==="rendu")&&!e.data.fait}).sort(evSort);
   var mk=today.slice(0,7),encM=0,att=[];ciAll("money").forEach(function(m){if(m.data.sens==="in"){if(m.data.statut==="paye"&&(m.data.date||"").slice(0,7)===mk)encM+=+m.data.montant||0;if(m.data.statut!=="paye")att.push(m)}});
   var obj=+settings().objMois||0;
-  var sr=slotRequests().length;var x=(sr?'<button class="panel pad alert tap-panel" data-gotab="agenda"><b>📅 '+sr+' demande'+(sr>1?'s':'')+' de créneau à confirmer</b><span class="notice">Ouvre l\'Agenda pour confirmer</span></button>':'')+'<div class="notice" style="text-align:right">Version '+APP_V+' · <a href="#" data-news="1">Quoi de neuf ?</a></div><div class="qa"><button class="btn" data-defis="1">🏆 Défis</button><button class="btn" data-tools="1">🧮 Outils</button><button class="btn" data-annonce="1">📣 Annonce</button><button class="btn" data-settings="1">⚙️ Réglages</button></div>'+
+  var sr=slotRequests().length;var x=(sr?'<button class="panel pad alert tap-panel" data-gotab="agenda"><b>📅 '+sr+' demande'+(sr>1?'s':'')+' de créneau à confirmer</b><span class="notice">Ouvre l\'Agenda pour confirmer</span></button>':'')+'<div class="notice" style="text-align:right">Version '+APP_V+' · <a href="#" data-news="1">Quoi de neuf ?</a></div><div class="qa"><button class="btn" data-self="1">🏋️ Mon entraînement</button><button class="btn" data-defis="1">🏆 Défis</button><button class="btn" data-tools="1">🧮 Outils</button><button class="btn" data-annonce="1">📣 Annonce</button><button class="btn" data-settings="1">⚙️ Réglages</button></div>'+
    '<div class="panel pad"><div style="display:flex;align-items:baseline;gap:8px"><span class="k">Encaissé '+MOISL[new Date().getMonth()]+'</span><span class="grow"></span><b>'+eur(encM)+(obj?' / '+eur(obj):'')+'</b></div>'+(obj?'<div class="bar"><i style="width:'+Math.min(100,Math.round(encM/obj*100))+'%;background:var(--ok)"></i></div>':'')+'</div>'+
    '<section><h2 class="sec">Prochains rendez-vous</h2><div class="panel">'+(evs.length?evs.map(function(e){return evRowN(e,true)}).join(""):'<div class="empty">Rien de prévu. Ajoute un RDV dans l\'Agenda.</div>')+'</div></section>'+
    (dues.length?'<section><h2 class="sec">Programmes & rendus à faire</h2><div class="panel">'+dues.map(function(e){var n=daysTo(e.data.date);return '<div class="row"><button class="chk" data-evt-t="'+e.id+'" aria-label="Marquer rendu"></button><button class="grow plain" data-evt="'+e.id+'"><div class="t">'+esc(e.data.titre||(e.data.cid?"Programme "+cnom(e.data.cid):"Rendu"))+'</div><div class="s">'+fdate(e.data.date)+'</div></button><span class="chip '+(n<=3?'warn':'')+'">'+(n<0?'Retard '+(-n)+' j':n===0?"Aujourd'hui":'J-'+n)+'</span></div>'}).join("")+'</div></section>':'')+
@@ -2190,7 +2191,7 @@ lvlCard=guardFn(lvlCard,"");dispoBanner=guardFn(dispoBanner,"");defisCardClient=
 adaptS=guardFn(adaptS,function(s){return s});pauseDays=guardFn(pauseDays,0);dispoOf=guardFn(dispoOf,function(){return []});checkLevelUp=guardFn(checkLevelUp,null);
 
 /* ---------- mises à jour automatiques + Quoi de neuf ---------- */
-var APP_V="2026-10-26.1";
+var APP_V="2026-10-26.2";
 var NEWS=[{v:"2026-10-26",t:"Séance en duo 👯",i:["Fais ta séance en même temps qu'un·e ami·e, chacun sur son téléphone, même à distance","Vous voyez la progression de l'autre en direct, le coach vocal annonce ses séries","Bouton 🔥 pour encourager ton binôme, et +30 XP par séance en duo"]},
  {v:"2026-10-24.3",t:"Assistant, défis et calendrier",i:["💬 Assistant M Studio : réponses immédiates (remplacer un exo, nutrition, charges, prochaine séance…), et transmission à ta coach si besoin","🏆 Défis collectifs entre adhérents avec barre commune et podium","📅 Mon calendrier : semaine chargée = version express, vacances = poids du corps, pause = programme décalé"]},
  {v:"2026-10-24.2",t:"5 nouveautés waouh",i:["🔊 Coach vocal pendant les séances et les minuteurs (activable / désactivable)","👑 Niveaux, XP et 24 badges à débloquer","🎁 Ton récap du mois façon story, à partager sur Insta","▶️ Ton évolution photo en animation, et en vidéo à partager","🎲 Séance surprise : choisis ton temps, ton matériel et ton énergie, l'appli crée ta séance"]},
