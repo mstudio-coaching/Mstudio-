@@ -1031,7 +1031,7 @@ function chargesHtml(ctx,prog){var names={};weeksOf(prog).forEach(function(w){(w
 function rirOf(ch){ch=String(ch||"");var m=ch.match(/RIR\s*(\d+(?:[.,]5)?)/i);if(m)return parseFloat(m[1].replace(",","."));m=ch.match(/RPE\s*(\d+(?:[.,]5)?)/i);if(m)return Math.max(0,10-parseFloat(m[1].replace(",",".")));return null}
 function pctFromRir(reps,rir){return 100/(1+(reps+rir)/30)}
 function openClientTools(){
-  var T=[["rm","Mon 1RM"],["pct","% → charge"],["rir","RIR / RPE"],["fc","Zones cardio"]],cur="rm",ctx=D;
+  var T=[["rm","Mon 1RM"],["pct","% → charge"],["dq","Disques"],["rir","RIR / RPE"],["fc","Zones cardio"]],cur="rm",ctx=D;
   var ex={};weeksOf(D.prog).forEach(function(w){(w.seances||[]).forEach(function(s){(s.exos||[]).forEach(function(x){var r=rmFor(x.nom,ctx);if(r)ex[x.nom]=r.rm})})});
   var exOpts='<option value="">Saisir mon 1RM moi-même</option>'+Object.keys(ex).map(function(n){return '<option value="'+ex[n]+'">'+esc(n)+' (≈ '+fnum(rnd(ex[n]))+' kg)</option>'}).join("");
   function inp(id,l,ph){return '<div class="f"><label for="'+id+'">'+l+'</label><input id="'+id+'" inputmode="decimal" placeholder="'+(ph||"")+'"></div>'}
@@ -1042,10 +1042,12 @@ function openClientTools(){
    rir:'<div class="notice"><b>RIR</b> = répétitions encore possibles à la fin de la série (RIR 2 : tu pourrais en faire 2 de plus). <b>RPE</b> = effort ressenti sur 10 (RPE 8 = RIR 2).</div><div class="f"><label for="c_ex">Exercice</label><select id="c_ex">'+exOpts+'</select></div>'+inp("c_rm","Ou ton 1RM (kg)","40")+'<div class="frow">'+inp("c_r","Répétitions à faire","10")+inp("c_rir","RIR visé","2")+'</div><div id="c_out"></div>',
    fc:'<div class="frow">'+inp("c_age","Âge",String(age||"35"))+inp("c_rep","FC de repos (facultatif)","65")+'</div><div id="c_out"></div><div class="notice">Prends ton pouls au réveil, allongé, sur 15 s × 4 pour la FC de repos.</div>'
   };
+  V.dq='<div class="notice">Indique la charge totale sur la barre : on te dit quoi mettre de chaque côté.</div><div class="frow">'+inp("c_dk","Charge totale (kg)","60")+'<div class="f"><label for="c_bar">Barre</label><select id="c_bar"><option value="20">Barre 20 kg</option><option value="15">Barre 15 kg</option></select></div></div><div id="c_out"></div>';
   function g(b,id){var e=b.querySelector("#"+id);return e?parseFloat(String(e.value).replace(",",".")):NaN}
   function rmIn(b){var s=b.querySelector("#c_ex"),v=g(b,"c_rm");return v||(s&&+s.value)||0}
   function tbl(rm){return '<table class="pct"><tr><th>%</th><th>Charge</th><th>Reps possibles</th></tr>'+[95,90,85,80,75,70,65,60,50].map(function(p){return '<tr><td>'+p+' %</td><td><b>'+fnum(rnd(rm*p/100))+' kg</b></td><td>≈ '+Math.max(1,Math.round(30*(100/p-1)))+'</td></tr>'}).join("")+'</table>'}
   function calc(b){var o=b.querySelector("#c_out"),h="";
+    if(cur==="dq"){var tk=g(b,"c_dk"),bar=+(b.querySelector("#c_bar")||{}).value||20;if(tk&&tk>=bar){var pt=platesText(tk,bar);h='<div class="res"><div class="k">Charge totale '+fnum(tk)+' kg</div><div class="big" style="font-size:22px">'+esc(pt)+'</div></div>'}else if(tk){h='<div class="notice">La charge doit être au moins égale au poids de la barre ('+bar+' kg).</div>'}o.innerHTML=h;return}
     if(cur==="rm"){var kg=g(b,"c_kg"),r=g(b,"c_r"),rir=g(b,"c_rir")||0;if(kg&&r){var rm=epley(kg,r+rir);h='<div class="res"><div class="k">Ton 1RM estimé</div><div class="big">'+fnum(rnd(rm))+' kg</div><div class="notice">'+fnum(kg)+' kg × '+r+' reps'+(rir?' avec '+rir+' en réserve':'')+' (formule d\'Epley)</div></div>'+tbl(rm)}}
     else if(cur==="pct"){var rm2=rmIn(b),p=g(b,"c_p");if(rm2&&p)h='<div class="res"><div class="k">'+fnum(p)+' % de '+fnum(rnd(rm2))+' kg</div><div class="big">'+fnum(rnd(rm2*p/100))+' kg</div><div class="notice">Environ '+Math.max(1,Math.round(30*(100/p-1)))+' répétitions possibles à cette charge.</div></div>';else if(rm2)h=tbl(rm2)}
     else if(cur==="rir"){var rm3=rmIn(b),r3=g(b,"c_r"),ri=g(b,"c_rir");if(rm3&&r3&&!isNaN(ri)){var pc=pctFromRir(r3,ri);h='<div class="res"><div class="k">'+r3+' reps à RIR '+fnum(ri)+' (RPE '+fnum(10-ri)+')</div><div class="big">'+fnum(rnd(rm3*pc/100))+' kg</div><div class="notice">≈ '+Math.round(pc)+' % de ton 1RM. Si tu finis avec plus de '+fnum(ri)+' reps en réserve, augmente ; si tu échoues avant, baisse.</div></div>'}}
@@ -2908,8 +2910,8 @@ lvlCard=guardFn(lvlCard,"");dispoBanner=guardFn(dispoBanner,"");defisCardClient=
 adaptS=guardFn(adaptS,function(s){return s});pauseDays=guardFn(pauseDays,0);dispoOf=guardFn(dispoOf,function(){return []});checkLevelUp=guardFn(checkLevelUp,null);
 
 /* ---------- mises à jour automatiques + Quoi de neuf ---------- */
-var APP_V="2026-11-02.2";
-var NEWS=[{v:"2026-11-02.2",t:"Test Luc Léger 🔁",i:["Onglet Course › Mes allures : test navette 20 m avec les bips intégrés, palier annoncé à la voix, VMA et VO2max calculées et enregistrées"]},
+var APP_V="2026-11-20.1";
+var NEWS=[{v:"2026-11-20.1",t:"Heures de stage et disques 🔩",i:["Agenda : boutons +1 à +14 h pour les heures de stage, avec annulation","Séances : disques à mettre par côté pour les exercices à la barre (et les % en fourchette)","Calculateurs : onglet Disques pour une charge totale"]},{v:"2026-11-02.2",t:"Test Luc Léger 🔁",i:["Onglet Course › Mes allures : test navette 20 m avec les bips intégrés, palier annoncé à la voix, VMA et VO2max calculées et enregistrées"]},
  {v:"2026-11-02",t:"Plusieurs programmes + 5 outils",i:["📘 Un élève peut suivre plusieurs programmes en parallèle (il choisit lequel afficher)","🔎 Recherche globale (client, exercice, RDV, facture…)","📒 Livre des recettes URSSAF en PDF ou tableur","🚫 Annulations à temps / absences, décomptées du pack si tu veux","🗑️ Corbeille 30 jours et 🗂️ archivage des anciens clients"]},
  {v:"2026-10-31",t:"Prévisions 🔮",i:["Dans Progrès › Perfs : ta progression projetée sur 4 semaines et la date de ton prochain cap (charges et 5 km), avec une courbe"]},
  {v:"2026-10-28.2",t:"4 nouveautés",i:["🪄 Générateur de programme : 5 questions, 6 semaines prêtes à relire","🎪 Enchaînements pole & tissu qui se débloquent avec les figures validées","🎵 Tempo guidé (ex. « tempo 3-1-1 ») avec bips et comptage des reps","🫁 Respiration guidée : cohérence cardiaque, récup, respiration carrée, sommeil"]},
