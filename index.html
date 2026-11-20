@@ -1006,8 +1006,14 @@ function suggest(x,ctx){if(pctOf(x.charge)||rirOf(x.charge)!=null)return null;va
   return null}
 function presc(x,ctx){var p=pctOf(x.charge),lab=p?fnum(p)+" % de ton 1RM":"";if(!p){var ri=rirOf(x.charge),rr=repRange(x.reps);if(ri==null||!rr)return null;p=pctFromRir(rr[1],ri);lab=rr[1]+" reps à RIR "+fnum(ri)+" ≈ "+Math.round(p)+" % de ton 1RM"}
   var r=rmFor(x.nom,ctx);if(!r)return {p:p,kg:0,lab:lab};return {p:p,kg:rnd(r.rm*p/100),rm:r.rm,src:r.src,eq:r.eq,lab:lab}}
+function isBarre(nom){nom=String(nom||"");if(/haltère|kettle|goblet|curl|extension|élévation|elevation|pompe|fente|dumbbell/i.test(nom))return false;return /squat|soulev|développé|developpe|hip thrust|clean|snatch|press|barre|deadlift|rowing barre/i.test(nom)}
+function platesFor(kg,bar){bar=+bar||20;kg=+kg;if(!kg||kg<bar)return null;var left=(kg-bar)/2,P=[25,20,15,10,5,2.5,1.25],out=[];P.forEach(function(p){var n=Math.floor(left/p+1e-9);if(n>0){out.push({w:p,n:n});left-=n*p}});return {bar:bar,out:out,rest:Math.round(left*100)/100,exact:left<0.01}}
+function platesText(kg,bar){var r=platesFor(kg,bar);if(!r)return "";var t=r.out.map(function(o){return o.n>1?o.n+" × "+fnum(o.w)+" kg":fnum(o.w)+" kg"}).join(" + ");return (r.out.length?t:"aucun disque")+" par côté (barre "+r.bar+" kg)"+(r.exact?"":" · reste "+fnum(r.rest)+" kg par côté")}
 function chargeHint(x,ctx){var h='',pr=presc(x,ctx),sg=suggest(x,ctx);
-  if(pr&&pr.kg)h+='<div class="last">🎯 '+esc(pr.lab)+' = <b>'+fnum(pr.kg)+' kg</b>'+(pr.eq?' ('+esc(pr.eq)+')':'')+'</div>';
+  var rg=String(x.charge||"").match(/(\d+(?:[.,]\d+)?)\s*(?:à|-|–)\s*(\d+(?:[.,]\d+)?)\s*%/);
+  if(rg&&pr&&pr.kg&&pctOf(x.charge)){var a=parseFloat(rg[1].replace(",",".")),b=parseFloat(rg[2].replace(",",".")),rm=pr.kg*100/pctOf(x.charge),lo=rnd(rm*a/100),hi=rnd(rm*b/100);
+    h+='<div class="last">🎯 '+esc(a+" à "+b)+' % de ton 1RM = <b>'+fnum(lo)+' à '+fnum(hi)+' kg</b></div>'+(isBarre(x.nom)?'<div class="last">🔩 '+fnum(hi)+' kg : '+esc(platesText(hi))+'</div>':'')}
+  else if(pr&&pr.kg)h+='<div class="last">🎯 '+esc(pr.lab)+' = <b>'+fnum(pr.kg)+' kg</b>'+(pr.eq?' ('+esc(pr.eq)+')':'')+'</div>'+(isBarre(x.nom)&&platesText(pr.kg)?'<div class="last">🔩 '+esc(platesText(pr.kg))+'</div>':'');
   else if(pr)h+='<div class="last">🎯 '+esc(pr.lab)+' : fais une série test pour qu\'on calcule ta charge.</div>';
   if(sg)h+='<div class="sug '+sg.t+'">'+(sg.t==="up"?"📈 ":sg.t==="down"?"↘️ ":"➡️ ")+esc(sg.txt)+'</div>';
   return h}
@@ -1294,11 +1300,13 @@ function vAgendaN(){if(!C.ciOk)return migrNotice();
   return '<div class="panel"><div class="cal-head"><button class="btn sm ghost" data-mv="-1" aria-label="Mois précédent">‹</button><div class="m">'+MOISL[mo]+' '+y+'</div><button class="btn sm ghost" data-mv="0">Auj.</button><button class="btn sm ghost" data-mv="1" aria-label="Mois suivant">›</button></div><div class="cal-grid">'+cells+'</div></div>'+
    '<div class="legend">'+Object.keys(EVT).map(function(k){return '<span class="chip '+EVT[k].c+'">'+EVT[k].l+'</span>'}).join("")+'</div>'+
    '<section><h2 class="sec" style="display:flex;align-items:center;gap:8px"><span class="grow">'+fdate(sel)+'</span><button class="btn sm" data-newevt="1">+ Ajouter</button></h2><div class="panel">'+(list.length?list.map(function(e){return evRowN(e,false)}).join(""):'<div class="empty">Journée libre.</div>')+'</div></section>'+
-   '<div class="panel pad"><div style="display:flex;align-items:baseline;gap:8px"><span class="k">Heures de stage</span><span class="grow"></span><b>'+sh+' / '+sg+' h</b></div><div class="bar"><i style="width:'+Math.min(100,Math.round(sh/sg*100))+'%;background:var(--stage)"></i></div><div class="notice" style="margin-top:6px">Compte les événements « Stage » cochés.</div></div>'+slotsCoachHtml()}
+   '<div class="panel pad"><div style="display:flex;align-items:baseline;gap:8px"><span class="k">Heures de stage</span><span class="grow"></span><b>'+sh+' / '+sg+' h</b></div><div class="bar"><i style="width:'+Math.min(100,Math.round(sh/sg*100))+'%;background:var(--stage)"></i></div><div class="notice" style="margin-top:6px">Touche +N h pour ajouter les heures faites (14 h max par saisie).</div><div class="chips" style="margin-top:8px">'+[1,2,3,4,5,6,7,8,9,10,11,12,13,14].map(function(n){return '<button type="button" data-sh="'+n+'">+'+n+' h</button>'}).join("")+'</div><div style="margin-top:8px"><button class="btn sm ghost" data-shundo="1">↶ Annuler la dernière saisie</button></div></div>'+slotsCoachHtml()}
+function addStageH(n){if(!C.ciOk||!n)return;ciSave({kind:"evt",data:{type:"stage",titre:"Heures de stage",date:C.calSel||ymd(),duree:n,fait:true}}).then(function(){toast("+"+n+" h de stage ajoutées");render()}).catch(function(){})}
+function undoStageH(){var l=ciAll("evt").filter(function(e){return e.data.type==="stage"&&e.data.titre==="Heures de stage"}).sort(function(a,b){return (b.updated_at||"").localeCompare(a.updated_at||"")})[0];if(!l){toast("Rien à annuler");return}ciDel(l.id).then(function(){toast("Dernière saisie annulée");render()}).catch(function(){})}
 document.addEventListener("click",function(e){if(!prof||!isCoachUI())return;var t;
   if((t=e.target.closest("[data-day]"))){C.calSel=t.dataset.day;var d=pd(C.calSel);var cm=C.calMonth||new Date();if(d.getMonth()!==cm.getMonth())C.calMonth=new Date(d.getFullYear(),d.getMonth(),1);render()}
   else if((t=e.target.closest("[data-mv]"))){var v=+t.dataset.mv,c2=C.calMonth||new Date();C.calMonth=v?new Date(c2.getFullYear(),c2.getMonth()+v,1):new Date();if(!v)C.calSel=ymd();render()}
-  else if(e.target.closest("[data-newevt]"))editEvt({data:{date:C.calSel||ymd()}})});
+  else if(e.target.closest("[data-newevt]"))editEvt({data:{date:C.calSel||ymd()}});else if((t=e.target.closest("[data-sh]")))addStageH(+t.dataset.sh);else if(e.target.closest("[data-shundo]"))undoStageH()});
 
 /* ---------- budget ---------- */
 function vBudgetN(){if(!C.ciOk)return migrNotice();
